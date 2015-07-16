@@ -5,11 +5,18 @@ class CssQuickEditorView
     @element = document.createElement('div')
     @element.classList.add('css-quick-editor')
 
-    # Create message element
-    message = document.createElement('div')
-    message.textContent = "The CssQuickEditor PPPackage is Alive! It's ALIVE DUDE!"
-    message.classList.add('message')
-    @element.appendChild(message)
+    textEditorElement = document.createElement('atom-text-editor')
+    textEditor = textEditorElement.getModel()
+    grammarReg = atom.grammars
+
+    rootDir = atom.project.getDirectories()[0]
+    fileOpen = rootDir.getSubdirectory("lib").getFile("css-quick-editor-view.coffee")
+    textEditor.setText(fileOpen.readSync())
+    textEditor.setGrammar(grammarReg.selectGrammar(fileOpen.getPath(), fileOpen.readSync()))
+    #textEditor.setCursorScreenPosition({10, 1})
+
+    @element.appendChild(textEditorElement)
+
 
   # Returns an object that can be retrieved when package is activated
   serialize: ->
