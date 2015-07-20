@@ -1,30 +1,15 @@
 module.exports =
 class CssQuickEditorView
-  constructor: (serializedState) ->
-    # Create root element
+  constructor: ->
     @file = null
-    @element = document.createElement('div')
-    @element.classList.add('css-quick-editor')
+    @element = document.createElement 'div'
+    @element.classList.add 'css-quick-editor'
 
-    @textEditorView = document.createElement('atom-text-editor')
+    @textEditorView = document.createElement 'atom-text-editor'
     @textEditor = @textEditorView.getModel()
     @grammarReg = atom.grammars
 
-    styleFile = @findFileFromCSSIdentifier "."
-    path = styleFile.getPath()
-    content = styleFile.readSync()
-    @textEditor.getBuffer().setPath path
-    grammar = @grammarReg.selectGrammar path, content
-    @textEditor.setGrammar grammar
-    @textEditor.setText content
-
-
-    @element.appendChild(@textEditorView)
-
-
-
-  # Returns an object that can be retrieved when package is activated
-  serialize: ->
+    @element.appendChild @textEditorView
 
   # Tear down any state and detach
   destroy: ->
@@ -39,6 +24,15 @@ class CssQuickEditorView
   setFile: (file) ->
     @file = file
 
-  findFileFromCSSIdentifier: (identifier)->
-    rootDir = atom.project.getDirectories()[0]
-    return rootDir.getSubdirectory("styles").getFile("css-quick-editor.less")
+  open: ->
+    throw new Error "Must choose a file to quick-edit" if @file is null
+
+    path = @file.getPath()
+    @textEditor.getBuffer().setPath path
+    @file.read(false) #Cached copies are not okay, TODO think more about this
+    .then (content) =>
+      grammar = @grammarReg.selectGrammar path, content
+      @textEditor.setGrammar grammar
+      @textEditor.setText content
+    , (e) =>
+      console.error "File could not be read", e
