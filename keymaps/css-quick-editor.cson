@@ -9,3 +9,5 @@
 # https://atom.io/docs/latest/behind-atom-keymaps-in-depth
 'atom-workspace':
   'ctrl-alt-o': 'css-quick-editor:toggle'
+'atom-text-editor':
+  'shift-cmd-e': 'css-quick-editor:quick-edit'

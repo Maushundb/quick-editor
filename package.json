@@ -6,7 +6,8 @@
   "keywords": [
   ],
   "activationCommands": {
-    "atom-workspace": "css-quick-editor:toggle"
+    "atom-workspace": "css-quick-editor:toggle",
+    "atom-text-editor": "css-quick-editor:quick-edit"
   },
   "repository": "https://github.com/atom/css-quick-editor",
   "license": "MIT",

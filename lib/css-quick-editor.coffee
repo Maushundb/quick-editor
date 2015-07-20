@@ -3,12 +3,14 @@ CssQuickEditorView = require './css-quick-editor-view'
 
 module.exports = CssQuickEditor =
   cssQuickEditorView: null
-  bottomPanel: null
+  panel: null
   subscriptions: null
 
   activate: (state) ->
+
     @cssQuickEditorView = new CssQuickEditorView(state.cssQuickEditorViewState)
-    @bottomPanel = atom.workspace.addBottomPanel(item: @cssQuickEditorView.getElement(), visible: false)
+    @cssQuickEditorView.setFile(@findFileFromCSSIdentifier("."))
+    @panel = atom.workspace.addBottomPanel(item: @cssQuickEditorView.getElement(), visible: false)
 
     # Events subscribed to in atom's system can be easily cleaned up with a CompositeDisposable
     @subscriptions = new CompositeDisposable
@@ -16,8 +18,11 @@ module.exports = CssQuickEditor =
     # Register command that toggles this view
     @subscriptions.add atom.commands.add 'atom-workspace', 'css-quick-editor:toggle': => @toggle()
 
+    @subscriptions.add atom.commands.add 'atom-workspace', 'css-quick-editor:quick-edit': =>
+      @quickEdit()
+
   deactivate: ->
-    @bottomPanel.destroy()
+    @panel.destroy()
     @subscriptions.dispose()
     @cssQuickEditorView.destroy()
 
@@ -27,7 +32,13 @@ module.exports = CssQuickEditor =
   toggle: ->
     console.log 'CssQuickEditor was toggled!'
 
-    if @bottomPanel.isVisible()
-      @bottomPanel.hide()
+  quickEdit: ->
+    if @panel.isVisible()
+      @cssQuickEditorView.save()
+      @panel.hide()
     else
-      @bottomPanel.show()
+      @panel.show()
+
+  findFileFromCSSIdentifier: (identifier)->
+    rootDir = atom.project.getDirectories()[0]
+    return rootDir.getSubdirectory("styles").getFile("css-quick-editor.less")

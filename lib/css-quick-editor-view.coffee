@@ -2,20 +2,25 @@ module.exports =
 class CssQuickEditorView
   constructor: (serializedState) ->
     # Create root element
+    @file = null
     @element = document.createElement('div')
     @element.classList.add('css-quick-editor')
 
-    textEditorElement = document.createElement('atom-text-editor')
-    textEditor = textEditorElement.getModel()
-    grammarReg = atom.grammars
+    @textEditorView = document.createElement('atom-text-editor')
+    @textEditor = @textEditorView.getModel()
+    @grammarReg = atom.grammars
 
-    rootDir = atom.project.getDirectories()[0]
-    fileOpen = rootDir.getSubdirectory("lib").getFile("css-quick-editor-view.coffee")
-    textEditor.setText(fileOpen.readSync())
-    textEditor.setGrammar(grammarReg.selectGrammar(fileOpen.getPath(), fileOpen.readSync()))
-    #textEditor.setCursorScreenPosition({10, 1})
+    styleFile = @findFileFromCSSIdentifier "."
+    path = styleFile.getPath()
+    content = styleFile.readSync()
+    @textEditor.getBuffer().setPath path
+    grammar = @grammarReg.selectGrammar path, content
+    @textEditor.setGrammar grammar
+    @textEditor.setText content
 
-    @element.appendChild(textEditorElement)
+
+    @element.appendChild(@textEditorView)
+
 
 
   # Returns an object that can be retrieved when package is activated
@@ -27,3 +32,13 @@ class CssQuickEditorView
 
   getElement: ->
     @element
+
+  save: ->
+    @textEditor.save()
+
+  setFile: (file) ->
+    @file = file
+
+  findFileFromCSSIdentifier: (identifier)->
+    rootDir = atom.project.getDirectories()[0]
+    return rootDir.getSubdirectory("styles").getFile("css-quick-editor.less")
