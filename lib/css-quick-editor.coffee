@@ -38,18 +38,21 @@ module.exports = CssQuickEditor =
       @cssQuickEditorView.save()
       @panel.hide()
     else
-      @cssQuickEditorView.setFile(@findFileFromCSSIdentifier2("."))
-      @findFileFromCSSIdentifier(@parseSelectedCSSIdentifier())
-      @cssQuickEditorView.open()
-      @panel.show()
+      @findFilesFromCSSIdentifier(@parseSelectedCSSIdentifier())
+      .then (files) =>
+        @cssQuickEditorView.setFile(files[1])
+        @cssQuickEditorView.open()
+        @panel.show()
 
-  findFileFromCSSIdentifier:(identifier) ->
+  findFilesFromCSSIdentifier:(identifier) ->
     id_reg = new RegExp(identifier)
     directories = atom.project.getDirectories()
-    filePromises = directories.map(@searchDirectory.bind(@))
-    Promise.all(filePromises).then (files) =>
-      files = @flattenArray(files)
-      console.log(files)
+    filePromises = directories.map((f) =>
+      return @searchDirectory(f, id_reg)
+    )
+    filePromises = Promise.all(filePromises).then (files) =>
+      files = @flattenArray(files).filter((i) -> i isnt null)
+    return filePromises
 
   parseSelectedCSSIdentifier: ->
     activeTextEditor = atom.workspace.getActiveTextEditor()
@@ -93,12 +96,13 @@ module.exports = CssQuickEditor =
               result = @searchFile(entry, regex)
             else if entry.isDirectory()
               result = @searchDirectory(entry, regex)
+          # This pushes promises that resolve to null as well TODO
           results.push result if result isnt null
         resolve(Promise.all(results))
 
   searchFile: (file, regex) ->
     new Promise (resolve, reject) ->
-      file.read()
+      file.read(true)
         .then (content) ->
           result = content.search(regex)
           resolve(if result > 0 then [result, file] else null)
@@ -116,9 +120,3 @@ module.exports = CssQuickEditor =
   		r = arr
   		arr = [].concat.apply([], arr)
   	return arr
-
-
-  findFileFromCSSIdentifier2:(identifier) ->
-
-    rootDir = atom.project.getDirectories()[0]
-    return rootDir.getSubdirectory("styles").getFile("css-quick-editor.less")
