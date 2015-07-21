@@ -26,6 +26,13 @@ module.exports = CssQuickEditor =
   serialize: ->
     cssQuickEditorViewState: @cssQuickEditorView.serialize()
 
+  supportedFileExtensions: [
+    "css"
+    "scss"
+    "less"
+    "sass"
+  ]
+
   quickEdit: ->
     if @panel.isVisible()
       @cssQuickEditorView.save()
@@ -35,6 +42,14 @@ module.exports = CssQuickEditor =
       @findFileFromCSSIdentifier(@parseSelectedCSSIdentifier())
       @cssQuickEditorView.open()
       @panel.show()
+
+  findFileFromCSSIdentifier:(identifier) ->
+    id_reg = new RegExp(identifier)
+    directories = atom.project.getDirectories()
+    filePromises = directories.map(@searchDirectory.bind(@))
+    Promise.all(filePromises).then (files) =>
+      files = @flattenArray(files)
+      console.log(files)
 
   parseSelectedCSSIdentifier: ->
     activeTextEditor = atom.workspace.getActiveTextEditor()
@@ -63,15 +78,45 @@ module.exports = CssQuickEditor =
     return word.slice(0,-1)
 
   textNotCSSIdentifier: ->
-    throw new Error("Selected text is not a CSS identifier")
+    throw new Error "Selected text is not a CSS identifier"
 
-  findFileFromCSSIdentifier:(identifier) ->
-    id_reg = new RegExp(identifier)
-    directories = atom.project.getDirectories()
-    files = @searchDirectory(dir) for dir in directories
+  searchDirectory: (dir, regex) ->
+    new Promise (resolve, reject) =>
+      results = []
+      dir.getEntries (err, entries) =>
+        reject(err) if err isnt null
+        for entry in entries
+          result = null
+          name = entry.getBaseName()
+          if name.slice(0, 1) isnt "."
+            if entry.isFile() and name.split(".").pop() in @supportedFileExtensions
+              result = @searchFile(entry, regex)
+            else if entry.isDirectory()
+              result = @searchDirectory(entry, regex)
+          results.push result if result isnt null
+        resolve(Promise.all(results))
 
-  searchDirectory: (dir) ->
-    
+  searchFile: (file, regex) ->
+    new Promise (resolve, reject) ->
+      file.read()
+        .then (content) ->
+          result = content.search(regex)
+          resolve(if result > 0 then [result, file] else null)
+
+
+  #Solution from https://gist.github.com/th507/5158907
+  arrayEqual: (a, b) ->
+    i = Math.max(a.length, b.length, 1)
+    continue while(i-- >= 0 and a[i] is b[i])
+    return (i is -2)
+
+  flattenArray: (arr) ->
+  	r = []
+  	while (!@arrayEqual(r, arr))
+  		r = arr
+  		arr = [].concat.apply([], arr)
+  	return arr
+
 
   findFileFromCSSIdentifier2:(identifier) ->
 
