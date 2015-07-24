@@ -37,8 +37,8 @@ module.exports = DirectoryCSSSearcher =
       new Promise (resolve, reject) ->
         file.read(true)
           .then (content) ->
-            result = content.search(regex)
-            resolve(if result > 0 then [result, file] else null)
+            result = regex.test(content)
+            resolve(if result then file else null)
           .catch (e) ->
             console.error "Error occured when searching file", e
 

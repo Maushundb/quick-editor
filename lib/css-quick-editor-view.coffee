@@ -6,7 +6,9 @@ class CssQuickEditorView
     @element.classList.add 'css-quick-editor'
 
     @textEditorView = document.createElement 'atom-text-editor'
+    @textEditorView.style.position = "absolute"
     @textEditor = @textEditorView.getModel()
+
     @grammarReg = atom.grammars
 
     @element.appendChild @textEditorView
@@ -24,15 +26,29 @@ class CssQuickEditorView
   setFile: (file) ->
     @file = file
 
-  open: ->
+  scroll: ->
+    @textEditor.scrollToCursorPosition(false)
+
+  setHeight: ->
+    @textEditor.displayBuffer.setHeight(200)
+    @textEditorView.style.height = "200"
+    
+  open: (identifier) ->
     throw new Error "Must choose a file to quick-edit" if @file is null
 
     path = @file.getPath()
     @textEditor.getBuffer().setPath path
+    regex = new RegExp(identifier)
     @file.read(false) #Cached copies are not okay, TODO think more about this
     .then (content) =>
       grammar = @grammarReg.selectGrammar path, content
       @textEditor.setGrammar grammar
       @textEditor.setText content
+      @range = null
+      @textEditor.scan regex, (it) =>
+        @range = it.range
+        it.stop()
+      @textEditor.setCursorBufferPosition(@range.start)
+      @textEditor.scrollToCursorPosition(false)
     , (e) =>
-      console.error "File could not be read", e
+      console.error "File could not be opened", e
