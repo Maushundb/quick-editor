@@ -6,7 +6,6 @@ class CssQuickEditorView
     @element.classList.add 'css-quick-editor'
 
     @textEditorView = document.createElement 'atom-text-editor'
-    @textEditorView.style.position = "absolute"
     @textEditor = @textEditorView.getModel()
 
     @grammarReg = atom.grammars
@@ -31,8 +30,8 @@ class CssQuickEditorView
 
   setHeight: ->
     @textEditor.displayBuffer.setHeight(200)
-    @textEditorView.style.height = "200"
-    
+    @textEditorView.style.height = "200px"
+
   open: (identifier) ->
     throw new Error "Must choose a file to quick-edit" if @file is null
 
@@ -49,6 +48,6 @@ class CssQuickEditorView
         @range = it.range
         it.stop()
       @textEditor.setCursorBufferPosition(@range.start)
-      @textEditor.scrollToCursorPosition(false)
+      @textEditor.scrollToCursorPosition(true)
     , (e) =>
       console.error "File could not be opened", e

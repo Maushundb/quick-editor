@@ -1,4 +1,5 @@
-
+# Change to use https://discuss.atom.io/t/how-to-import-and-use-directorysearch-in-atom/19205/3
+# if performance is better
 module.exports = DirectoryCSSSearcher =
 
     supportedFileExtensions: [
