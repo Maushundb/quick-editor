@@ -34,8 +34,8 @@ module.exports = CssQuickEditor =
     else
       identifier = @parseSelectedCSSIdentifier()
       @findFilesFromCSSIdentifier(identifier)
-      .then (files) =>
-        @cssQuickEditorView.setFile(files[0])
+      .then (file) =>
+        @cssQuickEditorView.setFile(file)
         @cssQuickEditorView.open(identifier)
         @panel.show()
         # This is, of course, a terrible hack. Scrolling in the TextEditor
