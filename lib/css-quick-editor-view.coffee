@@ -28,13 +28,13 @@ class CssQuickEditorView
   scroll: ->
     @textEditor.scrollToCursorPosition(false)
 
-  setHeight: ->
-    @textEditor.displayBuffer.setHeight(200)
-    @textEditorView.style.height = "200px"
+  setText: (text) ->
+
 
   open: (identifier) ->
     throw new Error "Must choose a file to quick-edit" if @file is null
 
+    @lineHeight = atom.workspace.getActiveTextEditor().getLineHeightInPixels()
     path = @file.getPath()
     @textEditor.getBuffer().setPath path
     regex = new RegExp(identifier)

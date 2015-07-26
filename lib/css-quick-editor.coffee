@@ -43,10 +43,10 @@ module.exports = CssQuickEditor =
         # panel is opened it will not scroll. This fixes this fixes that issue
         # for the time being. See:
         # https://discuss.atom.io/t/scrolling-the-text-editor-in-bottom-pane-and-getting-line-height/19171/2
-        # if @first
-        #   @first = false
-        #   terribleHackCallback = => @cssQuickEditorView.scroll()
-        #   setTimeout terribleHackCallback, 500
+        if @first
+          @first = false
+          terribleHackCallback = => @cssQuickEditorView.scroll()
+          setTimeout terribleHackCallback, 500
 
 
 

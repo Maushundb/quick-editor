@@ -10,11 +10,17 @@ module.exports = DirectoryCSSSearcher =
         "*.sass"
     ]
 
-    findFilesThatContain:(identifier) ->
-      id_reg = new RegExp(identifier)
+    findFilesThatContain:(selector) ->
+      id_reg = new RegExp(selector)
       atom.workspace.scan id_reg, {paths: @supportedFileExtensions}, @matchCallback.bind(@)
       .then () =>
-        new File(@searchResults[0].filePath, false)
+        return new File(@searchResults[0].filePath, false)
 
     matchCallback: (match) ->
       @searchResults.push(match)
+      console.log(match)
+
+    getTextForSelector: (selector, file) ->
+      file.read()
+      .then (content) ->
+        
