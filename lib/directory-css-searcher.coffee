@@ -28,7 +28,6 @@ module.exports = DirectoryCSSSearcher =
         lineNumber = 0
         text = ""
         for ch, i in content
-          lineNumber++ if ch is "\n" or ch is "\r\n"
           if lineNumber >= @matchStartLine
             text += ch
             if ch is "{"
@@ -39,4 +38,5 @@ module.exports = DirectoryCSSSearcher =
             if ch is "}" and stack
               stack--
               break if stack is 0
+          lineNumber++ if ch is "\n" or ch is "\r\n"
         return [text, @matchStartLine, lineNumber,  @file]

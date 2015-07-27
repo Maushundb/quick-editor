@@ -1,4 +1,4 @@
-{Point} = require 'atom'
+{Point, Range} = require 'atom'
 module.exports =
 class CssQuickEditorView
   constructor: ->
@@ -30,7 +30,9 @@ class CssQuickEditorView
       modifyingTextEditor.setText content
 
       modifiedSelector = @textEditor.getText()
-      modifyingTextEditor.setTextInBufferRange(@editRange, modifiedSelector)
+      a = modifyingTextEditor.setTextInBufferRange(@editRange, modifiedSelector)
+      modifyingTextEditor.save()
+      console.log(@editRange)
 
 
 
@@ -48,7 +50,7 @@ class CssQuickEditorView
     @textEditor.setGrammar grammar
     @textEditor.setText @text
 
-    @editRange = new Range(new Point(start, 0), new Point(end, 0))
+    @editRange = new Range(new Point(start, 0), new Point(end, Infinity))
 
   scroll: ->
     @textEditor.scrollToCursorPosition(false)
