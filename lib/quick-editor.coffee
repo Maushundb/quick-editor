@@ -38,10 +38,15 @@ module.exports = QuickEditor =
         @quickEditorView.setup(text, start, end, file)
         @quickEditorView.open()
         @panel.show()
+      .catch (e) ->
+        console.error(e)
 
   findFilesFromCSSIdentifier:(identifier) ->
     @searcher.findFilesThatContain identifier
-    .then () => @searcher.getSelectorText()
+    .then () =>
+      @searcher.getSelectorText()
+    .catch (e) ->
+      throw e
 
   parseSelectedCSSIdentifier: ->
     activeTextEditor = atom.workspace.getActiveTextEditor()

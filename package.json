@@ -1,9 +1,16 @@
 {
   "name": "quick-editor",
   "main": "./lib/quick-editor",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Quickly select and edit CSS/LESS/SCSS styles from the context of your markdown.",
   "keywords": [
+    "quick",
+    "edit",
+    "editor",
+    "quickedit",
+    "quickeditor",
+    "quick-editor",
+    "css"
   ],
   "activationCommands": {
     "atom-text-editor": "quick-editor:quick-edit"
