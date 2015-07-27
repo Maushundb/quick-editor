@@ -1,5 +1,3 @@
-# Change to use https://discuss.atom.io/t/how-to-import-and-use-directorysearch-in-atom/19205/3
-# if performance is better
 {File} = require 'atom'
 module.exports = DirectoryCSSSearcher =
     searchResults: []
@@ -9,7 +7,6 @@ module.exports = DirectoryCSSSearcher =
         "*.css"
         "*.scss"
         "*.less"
-        "*.sass"
     ]
 
     findFilesThatContain:(selector) ->
@@ -18,7 +15,7 @@ module.exports = DirectoryCSSSearcher =
       .then () =>
         filePath = @searchResults[0].filePath
         @matchStartLine = @searchResults[0].matches[0].range[0][0]
-        @file = new File(filePath, false)
+        @file = new File filePath, false
 
     matchCallback: (match) ->
       @searchResults.push(match)
@@ -27,14 +24,11 @@ module.exports = DirectoryCSSSearcher =
       @file.read().then (content) =>
         lineNumber = 0
         text = ""
-        for ch, i in content
+        for ch in content
           if lineNumber >= @matchStartLine
             text += ch
             if ch is "{"
-              if not stack?
-                stack = 1
-              else
-                stack++
+              if not stack? then stack = 1 else stack++
             if ch is "}" and stack
               stack--
               break if stack is 0

@@ -16,7 +16,6 @@ class CssQuickEditorView
 
     @element.appendChild @textEditorView
 
-  # Tear down any state and detach
   destroy: ->
     @element.remove()
 
@@ -30,11 +29,8 @@ class CssQuickEditorView
       modifyingTextEditor.setText content
 
       modifiedSelector = @textEditor.getText()
-      a = modifyingTextEditor.setTextInBufferRange(@editRange, modifiedSelector)
+      modifyingTextEditor.setTextInBufferRange(@editRange, modifiedSelector)
       modifyingTextEditor.save()
-      console.log(@editRange)
-
-
 
   setFile: (file) ->
     @file = file
@@ -52,10 +48,9 @@ class CssQuickEditorView
 
     @editRange = new Range(new Point(start, 0), new Point(end, Infinity))
 
-  scroll: ->
-    @textEditor.scrollToCursorPosition(false)
-
-  open: (identifier) ->
+  open: () ->
     throw new Error "Must choose a file to quick-edit" if @file is null
 
-    @lineHeight = atom.workspace.getActiveTextEditor().getLineHeightInPixels()
+    lineHeight = atom.workspace.getActiveTextEditor().getLineHeightInPixels()
+    numLines = @editRange.end.row - @editRange.start.row + 1
+    @element.style.height = (lineHeight * numLines) + "px"
