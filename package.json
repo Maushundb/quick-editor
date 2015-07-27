@@ -2,14 +2,13 @@
   "name": "quick-editor",
   "main": "./lib/quick-editor",
   "version": "0.0.0",
-  "description": "A short description of your package",
+  "description": "Quickly select and edit CSS/LESS/SCSS styles from the context of your markdown.",
   "keywords": [
   ],
   "activationCommands": {
-    "atom-workspace": "quick-editor:toggle",
     "atom-text-editor": "quick-editor:quick-edit"
   },
-  "repository": "https://github.com/atom/quick-editor",
+  "repository": "https://github.com/Maushundb/quick-editor",
   "license": "MIT",
   "engines": {
     "atom": ">=1.0.0 <2.0.0"

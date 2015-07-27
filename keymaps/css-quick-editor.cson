@@ -7,7 +7,5 @@
 
 # For more detailed documentation see
 # https://atom.io/docs/latest/behind-atom-keymaps-in-depth
-'atom-workspace':
-  'ctrl-alt-o': 'quick-editor:toggle'
 'atom-text-editor':
   'shift-cmd-e': 'quick-editor:quick-edit'

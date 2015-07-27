@@ -2,9 +2,7 @@
 module.exports =
 class QuickEditorView
   constructor: ->
-    @file = null
-    @text = null
-    @editRange = null
+    [@file, @text, @editRange] = []
 
     @element = document.createElement 'div'
     @element.classList.add 'quick-editor'
@@ -17,6 +15,7 @@ class QuickEditorView
     @element.appendChild @textEditorView
 
   destroy: ->
+    @textEditor = null
     @element.remove()
 
   getElement: ->

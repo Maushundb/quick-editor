@@ -3,14 +3,12 @@ DirectoryCSSSearcher = require './directory-css-searcher'
 {CompositeDisposable} = require 'atom'
 
 module.exports = QuickEditor =
-  quickEditorView: null
-  panel: null
-  subscriptions: null
-  first: true
-  searcher: null
+  quickEditorView : null
+  panel : null
+  subscriptions : null
+  searcher : null
 
   activate: (state) ->
-
     @quickEditorView = new quickEditorView()
     @panel = atom.workspace.addBottomPanel(item: @quickEditorView.getElement(), visible: false)
 
@@ -19,8 +17,8 @@ module.exports = QuickEditor =
     # Events subscribed to in atom's system can be easily cleaned up with a CompositeDisposable
     @subscriptions = new CompositeDisposable
 
-    # Register command that toggles the editor
-    @subscriptions.add atom.commands.add 'atom-workspace', 'quick-editor:quick-edit': =>
+    # Register commands
+    @subscriptions.add atom.commands.add 'atom-text-editor', 'quick-editor:quick-edit': =>
       @quickEdit()
 
   deactivate: ->
