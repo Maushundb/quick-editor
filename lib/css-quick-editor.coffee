@@ -34,24 +34,25 @@ module.exports = CssQuickEditor =
     else
       identifier = @parseSelectedCSSIdentifier()
       @findFilesFromCSSIdentifier(identifier)
-      .then (file) =>
-        @cssQuickEditorView.setFile(file)
-        @cssQuickEditorView.open(identifier)
+      .then ([text, start, end, file]) =>
+        @cssQuickEditorView.setup(text, start, end, file)
+        @cssQuickEditorView.open()
         @panel.show()
         # This is, of course, a terrible hack. Scrolling in the TextEditor
         # only works after the height has been calculated, so the first time the
         # panel is opened it will not scroll. This fixes this fixes that issue
         # for the time being. See:
         # https://discuss.atom.io/t/scrolling-the-text-editor-in-bottom-pane-and-getting-line-height/19171/2
-        if @first
-          @first = false
-          terribleHackCallback = => @cssQuickEditorView.scroll()
-          setTimeout terribleHackCallback, 500
+        # if @first
+        #   @first = false
+        #   terribleHackCallback = => @cssQuickEditorView.scroll()
+        #   setTimeout terribleHackCallback, 500
 
 
 
   findFilesFromCSSIdentifier:(identifier) ->
     DirectoryCSSSearcher.findFilesThatContain identifier
+    .then () -> DirectoryCSSSearcher.getSelectorText()
 
   parseSelectedCSSIdentifier: ->
     activeTextEditor = atom.workspace.getActiveTextEditor()

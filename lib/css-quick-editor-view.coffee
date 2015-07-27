@@ -1,7 +1,11 @@
+{Point} = require 'atom'
 module.exports =
 class CssQuickEditorView
   constructor: ->
     @file = null
+    @text = null
+    @editRange = null
+
     @element = document.createElement 'div'
     @element.classList.add 'css-quick-editor'
 
@@ -20,34 +24,36 @@ class CssQuickEditorView
     @element
 
   save: ->
-    @textEditor.save()
+    @file.read().then (content) =>
+      modifyingTextEditor = document.createElement('atom-text-editor').getModel()
+      modifyingTextEditor.getBuffer().setPath @file.getPath()
+      modifyingTextEditor.setText content
+
+      modifiedSelector = @textEditor.getText()
+      modifyingTextEditor.setTextInBufferRange(@editRange, modifiedSelector)
+
+
 
   setFile: (file) ->
     @file = file
 
+  setText: (text) ->
+    @text = text
+
+  setup: (text, start, end, file) ->
+    @setText(text)
+    @setFile(file)
+
+    grammar = @grammarReg.selectGrammar @file.getPath(), @text
+    @textEditor.setGrammar grammar
+    @textEditor.setText @text
+
+    @editRange = new Range(new Point(start, 0), new Point(end, 0))
+
   scroll: ->
     @textEditor.scrollToCursorPosition(false)
-
-  setText: (text) ->
-
 
   open: (identifier) ->
     throw new Error "Must choose a file to quick-edit" if @file is null
 
     @lineHeight = atom.workspace.getActiveTextEditor().getLineHeightInPixels()
-    path = @file.getPath()
-    @textEditor.getBuffer().setPath path
-    regex = new RegExp(identifier)
-    @file.read(false) #Cached copies are not okay, TODO think more about this
-    .then (content) =>
-      grammar = @grammarReg.selectGrammar path, content
-      @textEditor.setGrammar grammar
-      @textEditor.setText content
-      @range = null
-      @textEditor.scan regex, (it) =>
-        @range = it.range
-        it.stop()
-      @textEditor.setCursorBufferPosition(@range.start)
-      @textEditor.scrollToCursorPosition(true)
-    , (e) =>
-      console.error "File could not be opened", e
