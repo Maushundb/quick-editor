@@ -8,6 +8,6 @@
 # For more detailed documentation see
 # https://atom.io/docs/latest/behind-atom-keymaps-in-depth
 'atom-workspace':
-  'ctrl-alt-o': 'css-quick-editor:toggle'
+  'ctrl-alt-o': 'quick-editor:toggle'
 'atom-text-editor':
-  'shift-cmd-e': 'css-quick-editor:quick-edit'
+  'shift-cmd-e': 'quick-editor:quick-edit'

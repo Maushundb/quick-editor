@@ -1,40 +1,40 @@
-CssQuickEditor = require '../lib/css-quick-editor'
+QuickEditor = require '../lib/quick-editor'
 
 # Use the command `window:run-package-specs` (cmd-alt-ctrl-p) to run specs.
 #
 # To run a specific `it` or `describe` block add an `f` to the front (e.g. `fit`
 # or `fdescribe`). Remove the `f` to unfocus the block.
 
-describe "CssQuickEditor", ->
+describe "QuickEditor", ->
   [workspaceElement, activationPromise] = []
 
   beforeEach ->
     workspaceElement = atom.views.getView(atom.workspace)
-    activationPromise = atom.packages.activatePackage('css-quick-editor')
+    activationPromise = atom.packages.activatePackage('quick-editor')
 
-  describe "when the css-quick-editor:toggle event is triggered", ->
+  describe "when the quick-editor:toggle event is triggered", ->
     it "hides and shows the modal panel", ->
       # Before the activation event the view is not on the DOM, and no panel
       # has been created
-      expect(workspaceElement.querySelector('.css-quick-editor')).not.toExist()
+      expect(workspaceElement.querySelector('.quick-editor')).not.toExist()
 
       # This is an activation event, triggering it will cause the package to be
       # activated.
-      atom.commands.dispatch workspaceElement, 'css-quick-editor:toggle'
+      atom.commands.dispatch workspaceElement, 'quick-editor:toggle'
 
       waitsForPromise ->
         activationPromise
 
       runs ->
-        expect(workspaceElement.querySelector('.css-quick-editor')).toExist()
+        expect(workspaceElement.querySelector('.quick-editor')).toExist()
 
-        cssQuickEditorElement = workspaceElement.querySelector('.css-quick-editor')
-        expect(cssQuickEditorElement).toExist()
+        quickEditorElement = workspaceElement.querySelector('.quick-editor')
+        expect(quickEditorElement).toExist()
 
-        cssQuickEditorPanel = atom.workspace.panelForItem(cssQuickEditorElement)
-        expect(cssQuickEditorPanel.isVisible()).toBe true
-        atom.commands.dispatch workspaceElement, 'css-quick-editor:toggle'
-        expect(cssQuickEditorPanel.isVisible()).toBe false
+        quickEditorPanel = atom.workspace.panelForItem(quickEditorElement)
+        expect(quickEditorPanel.isVisible()).toBe true
+        atom.commands.dispatch workspaceElement, 'quick-editor:toggle'
+        expect(quickEditorPanel.isVisible()).toBe false
 
     it "hides and shows the view", ->
       # This test shows you an integration test testing at the view level.
@@ -45,18 +45,18 @@ describe "CssQuickEditor", ->
       # workspaceElement to the DOM are generally slower than those off DOM.
       jasmine.attachToDOM(workspaceElement)
 
-      expect(workspaceElement.querySelector('.css-quick-editor')).not.toExist()
+      expect(workspaceElement.querySelector('.quick-editor')).not.toExist()
 
       # This is an activation event, triggering it causes the package to be
       # activated.
-      atom.commands.dispatch workspaceElement, 'css-quick-editor:toggle'
+      atom.commands.dispatch workspaceElement, 'quick-editor:toggle'
 
       waitsForPromise ->
         activationPromise
 
       runs ->
         # Now we can test for view visibility
-        cssQuickEditorElement = workspaceElement.querySelector('.css-quick-editor')
-        expect(cssQuickEditorElement).toBeVisible()
-        atom.commands.dispatch workspaceElement, 'css-quick-editor:toggle'
-        expect(cssQuickEditorElement).not.toBeVisible()
+        quickEditorElement = workspaceElement.querySelector('.quick-editor')
+        expect(quickEditorElement).toBeVisible()
+        atom.commands.dispatch workspaceElement, 'quick-editor:toggle'
+        expect(quickEditorElement).not.toBeVisible()

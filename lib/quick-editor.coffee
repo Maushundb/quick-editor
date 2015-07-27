@@ -1,58 +1,49 @@
-CssQuickEditorView = require './css-quick-editor-view'
+quickEditorView = require './quick-editor-view'
 DirectoryCSSSearcher = require './directory-css-searcher'
 {CompositeDisposable} = require 'atom'
 
-module.exports = CssQuickEditor =
-  cssQuickEditorView: null
+module.exports = QuickEditor =
+  quickEditorView: null
   panel: null
   subscriptions: null
   first: true
+  searcher: null
 
   activate: (state) ->
 
-    @cssQuickEditorView = new CssQuickEditorView()
-    @panel = atom.workspace.addBottomPanel(item: @cssQuickEditorView.getElement(), visible: false)
+    @quickEditorView = new quickEditorView()
+    @panel = atom.workspace.addBottomPanel(item: @quickEditorView.getElement(), visible: false)
+
+    @searcher = new DirectoryCSSSearcher
 
     # Events subscribed to in atom's system can be easily cleaned up with a CompositeDisposable
     @subscriptions = new CompositeDisposable
 
     # Register command that toggles the editor
-    @subscriptions.add atom.commands.add 'atom-workspace', 'css-quick-editor:quick-edit': =>
+    @subscriptions.add atom.commands.add 'atom-workspace', 'quick-editor:quick-edit': =>
       @quickEdit()
-
 
   deactivate: ->
     @panel.destroy()
     @subscriptions.dispose()
-    @cssQuickEditorView.destroy()
-
+    @quickEditorView.destroy()
 
   quickEdit: ->
     if @panel.isVisible()
-      @cssQuickEditorView.save()
+      @quickEditorView.save()
       @panel.hide()
     else
       identifier = @parseSelectedCSSIdentifier()
       @findFilesFromCSSIdentifier(identifier)
       .then ([text, start, end, file]) =>
-        @cssQuickEditorView.setup(text, start, end, file)
-        @cssQuickEditorView.open()
+        @searcher.clear()
+        @quickEditorView.setup(text, start, end, file)
+        @quickEditorView.open()
         @panel.show()
-        # This is, of course, a terrible hack. Scrolling in the TextEditor
-        # only works after the height has been calculated, so the first time the
-        # panel is opened it will not scroll. This fixes this fixes that issue
-        # for the time being. See:
-        # https://discuss.atom.io/t/scrolling-the-text-editor-in-bottom-pane-and-getting-line-height/19171/2
-        # if @first
-        #   @first = false
-        #   terribleHackCallback = => @cssQuickEditorView.scroll()
-        #   setTimeout terribleHackCallback, 500
-
-
 
   findFilesFromCSSIdentifier:(identifier) ->
-    DirectoryCSSSearcher.findFilesThatContain identifier
-    .then () -> DirectoryCSSSearcher.getSelectorText()
+    @searcher.findFilesThatContain identifier
+    .then () => @searcher.getSelectorText()
 
   parseSelectedCSSIdentifier: ->
     activeTextEditor = atom.workspace.getActiveTextEditor()
@@ -73,7 +64,7 @@ module.exports = CssQuickEditor =
   getFirstIdentifier:(activeTextEditor) ->
     activeTextEditor.selectRight()
     word = activeTextEditor.getSelectedText()
-    while word.slice(-1) isnt "\"" and word isnt "\'"
+    while word.slice(-1) isnt "\"" and word.slice(-1) isnt "\'"
       activeTextEditor.selectRight()
       word = activeTextEditor.getSelectedText()
       @textNotCSSIdentifier() if word.slice(-1) is "\n"

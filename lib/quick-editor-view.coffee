@@ -1,13 +1,13 @@
 {Point, Range} = require 'atom'
 module.exports =
-class CssQuickEditorView
+class QuickEditorView
   constructor: ->
     @file = null
     @text = null
     @editRange = null
 
     @element = document.createElement 'div'
-    @element.classList.add 'css-quick-editor'
+    @element.classList.add 'quick-editor'
 
     @textEditorView = document.createElement 'atom-text-editor'
     @textEditor = @textEditorView.getModel()
