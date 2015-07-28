@@ -12,6 +12,8 @@ shift-cmd-e while the cursor is over a CSS id or class
 
 # TODO:
   * Write more tests
+  * Make class vs id matter for selectors along with stricter regex
+  * Add ability to change keymap
   * Create selector
   * Have gutter show correct line numbers
   * Multiple files with same selector

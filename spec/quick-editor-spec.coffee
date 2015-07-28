@@ -32,9 +32,6 @@ describe "QuickEditor", ->
       activateAndThen ->
         expect(workspaceView.querySelector(".quick-editor")).toExist()
 
-    xit "should show a panel", ->
+    it "should show a panel", ->
       activateAndThen ->
-          quickEditorElement = workspaceView.querySelector ".quick-editor"
-          quickEditorPanel = atom.workspace.panelForItem quickEditorElement
-
-          expect(quickEditorPanel.isVisible()).toBe true #HERE
+          waitsFor -> workspaceView.querySelector ".quick-editor"
