@@ -1,7 +1,7 @@
 {
   "name": "quick-editor",
   "main": "./lib/quick-editor",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Quickly select and edit CSS/LESS/SCSS styles from the context of your markdown.",
   "keywords": [
     "quick",
@@ -20,6 +20,5 @@
   "engines": {
     "atom": ">=1.0.0 <2.0.0"
   },
-  "dependencies": {
-  }
+  "dependencies": {}
 }
