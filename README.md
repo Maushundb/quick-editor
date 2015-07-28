@@ -5,6 +5,7 @@ Inspired by [Brackets](http://brackets.io/)'s quick edit feature.
 
 ![Quick Edit Demo](./quick-edit.gif?raw=true)
 
+
 ### Key Bindings
 shift-cmd-e while the cursor is over a CSS id or class
 
