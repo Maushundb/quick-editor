@@ -1,5 +1,5 @@
 # Quick Editor package
-![https://travis-ci.org/Maushundb/quick-editor.svg?branch=master](https://travis-ci.org/Maushundb/quick-editor)
+[![Build Status](https://travis-ci.org/Maushundb/quick-editor.svg?branch=master)](https://travis-ci.org/Maushundb/quick-editor)
 
 Quickly select and edit CSS/LESS/SCSS styles from the context of your markdown instead of cluttering up your coding environment with extra panes.
 Inspired by [Brackets](http://brackets.io/)'s quick edit feature.
