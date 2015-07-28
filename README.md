@@ -3,7 +3,7 @@
 Quickly select and edit CSS/LESS/SCSS styles from the context of your markdown instead of cluttering up your coding environment with extra panes.
 Inspired by [Brackets](http://brackets.io/)'s quick edit feature.
 
-![Quick Edit Demo](https://github.com/Maushundb/quick-editor/blob/master/quick-edit.gif)
+![Quick Edit Demo](https://github.com/Maushundb/quick-editor/blob/master/quick-edit.gif?raw=true)
 
 
 ### Key Bindings
