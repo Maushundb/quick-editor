@@ -1,5 +1,6 @@
 quickEditorView = require './quick-editor-view'
 DirectoryCSSSearcher = require './directory-css-searcher'
+MarkupParser = require './markup-parser'
 {CompositeDisposable} = require 'atom'
 
 module.exports = QuickEditor =
@@ -9,12 +10,14 @@ module.exports = QuickEditor =
   panel : null
   subscriptions : null
   searcher : null
+  parser: null
 
   activate: (state) ->
     @quickEditorView = new quickEditorView()
     @panel = atom.workspace.addBottomPanel(item: @quickEditorView.getElement(), visible: false)
 
     @searcher = new DirectoryCSSSearcher
+    @parser = new MarkupParser
 
     # Events subscribed to in atom's system can be easily cleaned up with a CompositeDisposable
     @subscriptions = new CompositeDisposable
@@ -53,31 +56,6 @@ module.exports = QuickEditor =
       throw e
 
   parseSelectedCSSIdentifier: ->
-    activeTextEditor = atom.workspace.getActiveTextEditor()
-    @moveCursorToIndentifierBoundary(activeTextEditor)
-    return @getFirstIdentifier(activeTextEditor)
-
-  moveCursorToIndentifierBoundary:(activeTextEditor) ->
-    activeTextEditor.selectLeft()
-    word = activeTextEditor.getSelectedText()
-    while word isnt "\"" and word isnt "\'"
-      activeTextEditor.selectRight()
-      activeTextEditor.moveLeft()
-      activeTextEditor.selectLeft()
-      word = activeTextEditor.getSelectedText()
-      @textNotCSSIdentifier() if word is "\n"
-    activeTextEditor.selectRight()
-
-  getFirstIdentifier:(activeTextEditor) ->
-    activeTextEditor.selectRight()
-    word = activeTextEditor.getSelectedText()
-    while word.slice(-1) isnt "\"" and word.slice(-1) isnt "\'"
-      activeTextEditor.selectRight()
-      word = activeTextEditor.getSelectedText()
-      @textNotCSSIdentifier() if word.slice(-1) is "\n"
-    activeTextEditor.selectLeft()
-    return word.slice(0,-1)
-
-  textNotCSSIdentifier: ->
-    atom.beep()
-    throw new Error "Selected text is not a CSS identifier"
+    editor = atom.workspace.getActiveTextEditor()
+    @parser.setEditor(editor)
+    @parser.parse()

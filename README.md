@@ -8,7 +8,7 @@ Inspired by [Brackets](http://brackets.io/)'s quick edit feature.
 
 
 ### Key Bindings
-shift-cmd-e while the cursor is over a CSS id or class
+<code>shift-cmd-e</code> while the cursor is over a CSS id or class
 
 
 # TODO:
