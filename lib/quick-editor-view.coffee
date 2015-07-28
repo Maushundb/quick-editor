@@ -1,8 +1,13 @@
-{Point, Range} = require 'atom'
+{Point, Range, CompositeDisposable} = require 'atom'
+
 module.exports =
 class QuickEditorView
+
+  ### Life Cycle Methods ###
+
   constructor: ->
-    [@file, @text, @editRange] = []
+    [@file, @text, @editRange, @lastObj] = []
+    @lineDelta = 0
 
     @element = document.createElement 'div'
     @element.classList.add 'quick-editor'
@@ -11,11 +16,12 @@ class QuickEditorView
     @textEditor = @textEditorView.getModel()
 
     @grammarReg = atom.grammars
+    @subscriptions = new CompositeDisposable
 
     @element.appendChild @textEditorView
 
   destroy: ->
-    @textEditor = null
+    @subscriptions.dispose()
     @element.remove()
 
   getElement: ->
@@ -31,11 +37,20 @@ class QuickEditorView
       modifyingTextEditor.setTextInBufferRange(@editRange, modifiedSelector)
       modifyingTextEditor.save()
 
+  ### State Setter Methods ###
+
   setFile: (file) ->
     @file = file
 
   setText: (text) ->
     @text = text
+
+  setHeight: () ->
+    lineHeight = atom.workspace.getActiveTextEditor().getLineHeightInPixels()
+    numLines = @editRange.end.row - @editRange.start.row + 1 + @lineDelta
+    @element.style.height = (lineHeight * numLines) + "px"
+
+  ### View Methods ###
 
   setup: (text, start, end, file) ->
     @setText(text)
@@ -45,11 +60,26 @@ class QuickEditorView
     @textEditor.setGrammar grammar
     @textEditor.setText @text
 
+    @subscriptions.add @textEditor.getBuffer().onDidChange(
+      @onBufferChangeCallback.bind(@)
+    )
+
     @editRange = new Range(new Point(start, 0), new Point(end, Infinity))
 
   open: () ->
     throw new Error "Must choose a file to quick-edit" if @file is null
+    @lineDelta = 0
+    @setHeight()
 
-    lineHeight = atom.workspace.getActiveTextEditor().getLineHeightInPixels()
-    numLines = @editRange.end.row - @editRange.start.row + 1
-    @element.style.height = (lineHeight * numLines) + "px"
+  onBufferChangeCallback: (obj) ->
+    if obj.newRange.isEqual @lastObj?.newRange
+      if obj.oldRange.isEqual @lastObj?.oldRange
+        return
+    @lastObj = obj
+    # Sometimes the textBuffer likes to call this callback twice with the same obj
+
+    newRows = obj.newRange.end.row - obj.newRange.start.row
+    oldRows = obj.oldRange.end.row - obj.oldRange.start.row
+    if newRows isnt oldRows
+      if newRows > oldRows then @lineDelta++ else @lineDelta--
+      @setHeight()

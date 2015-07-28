@@ -3,6 +3,8 @@ DirectoryCSSSearcher = require './directory-css-searcher'
 {CompositeDisposable} = require 'atom'
 
 module.exports = QuickEditor =
+
+  ### Life Cycle Methods ###
   quickEditorView : null
   panel : null
   subscriptions : null
@@ -26,6 +28,8 @@ module.exports = QuickEditor =
     @subscriptions.dispose()
     @quickEditorView.destroy()
 
+  ### Functionality Methods ###
+
   quickEdit: ->
     if @panel.isVisible()
       @quickEditorView.save()
@@ -39,7 +43,7 @@ module.exports = QuickEditor =
         @quickEditorView.open()
         @panel.show()
       .catch (e) ->
-        console.error(e)
+        console.error(e.message, e.stack)
 
   findFilesFromCSSIdentifier:(identifier) ->
     @searcher.findFilesThatContain identifier
@@ -75,4 +79,5 @@ module.exports = QuickEditor =
     return word.slice(0,-1)
 
   textNotCSSIdentifier: ->
+    atom.beep()
     throw new Error "Selected text is not a CSS identifier"
