@@ -6,31 +6,61 @@ class MarkupParser
     @textEditor = editor
 
   parse: ->
-    @moveCursorToIndentifierBoundary()
-    @getFirstIdentifier()
+    [bufferPos, line] = @getCurrentLine()
+    @parseLine(bufferPos.column, line)
 
-  moveCursorToIndentifierBoundary:() ->
-    originalPosition = 
-    @textEditor.selectLeft()
-    word = @textEditor.getSelectedText()
-    while word isnt "\"" and word isnt "\'"
-      @textEditor.selectRight()
-      @textEditor.moveLeft()
-      @textEditor.selectLeft()
-      word = @textEditor.getSelectedText()
-      @textNotCSSIdentifier() if word is "\n"
-    @textEditor.selectRight()
+  getCurrentLine: ->
+    bufferPos = @textEditor.getCursorBufferPosition()
+    line = @textEditor.getBuffer().lineForRow(bufferPos.row)
+    return [bufferPos, line]
 
-  getFirstIdentifier:() ->
-    @textEditor.selectRight()
-    word = @textEditor.getSelectedText()
-    while word.slice(-1) isnt "\"" and word.slice(-1) isnt "\'"
-      @textEditor.selectRight()
-      word = @textEditor.getSelectedText()
-      @textNotCSSIdentifier() if word.slice(-1) is "\n"
-    @textEditor.selectLeft()
-    return word.slice(0,-1)
+  parseLine: (startCol, line) ->
+    ###
+    Does not support the following id or class types:
+      id = "id1 i|d2", which isn't valid CSS
+      class = "class='Th|is", which is technically valid CSS, but stupid
+    Where "|" is the specified cursor position, if it matters
+    ###
+    outOfSelector = false
+    lastQuote = null
+    outerQuote = null
+
+    # Determine is selection is a class or id and what the outer delim is
+    `outer: //`
+    for i in [startCol..-1]
+      @textNotCSSIdentifier() if i is "-1"
+      # covers the case where multiple types of quotations are used
+      lastQuote = line[i] if line[i] is "\"" or line[i] is "\'"
+      if outOfSelector
+        switch line[i]
+          when "s"
+            prefix = "\\."
+            `break outer`
+          when "d"
+            prefix = "#"
+            `break outer`
+          else continue
+      if (line[i] is "=" and lastQuote)
+        outOfSelector = true
+        outerQuote = lastQuote
+
+    # set i to beginning of the selected class or id
+    for i in [startCol..0]
+      if line[i] is outerQuote or line[i] is " "
+        i++
+        break
+
+    # capture the class or id
+    selector=""
+    for j in [i..line.length]
+      @textNotCSSIdentifier() if j is line.length
+      break if line[j] is outerQuote or line[j] is " "
+      selector += line[j]
+
+    return prefix + selector
 
   textNotCSSIdentifier: ->
     atom.beep()
-    throw new Error "Selected text is not a CSS identifier"
+    e = new Error "Selected text is not a CSS identifier"
+    console.error(e.stack)
+    throw e
