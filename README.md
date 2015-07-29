@@ -13,12 +13,13 @@ Inspired by [Brackets](http://brackets.io/)'s quick edit feature.
 
 # TODO:
   * Write more tests
-  * Make class vs id matter for selectors along with stricter regex
   * Add ability to change keymap
   * Create selector
+  * Support SASS and Stylus
   * Have gutter show correct line numbers
   * Multiple files with same selector
   * Multiple matches in the same file
+  * Support Jade
   * Hash option for larger projects
   * Specifying a styles directory for larger projects to reduce search time
   * Add support for javascript functions
