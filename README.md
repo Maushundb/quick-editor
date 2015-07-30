@@ -6,14 +6,28 @@ Inspired by [Brackets](http://brackets.io/)'s quick edit feature.
 
 ![Quick Edit Demo](https://github.com/Maushundb/quick-editor/blob/master/quick-edit.gif?raw=true)
 
+# Install
+```
+apm install quick-editor
+```
 
-### Key Bindings
-<code>shift-cmd-e</code> while the cursor is over a CSS id or class
+Or search for <code>quick-editor</code> in Atom settings view.
 
+# Key Bindings
+The default <code>shift-cmd-e</code> will toggle quick-edit while the cursor is over a CSS id or class
+
+This can be edited by defining a keybinding as follows
+
+```coffee
+'atom-text-editor':
+  'shift-cmd-e': 'quick-editor:quick-edit'
+```
+
+
+# Release Notes: [here](./CHANGELOG.md)
 
 # Coming Soon:
   * Refactor to use space-pen View
-  * Add ability to change keymap
   * Create a selector
   * Support SASS and Stylus
   * Multiple files with same selector
