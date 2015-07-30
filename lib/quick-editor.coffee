@@ -1,7 +1,7 @@
 quickEditorView = require './quick-editor-view'
 DirectoryCSSSearcher = require './directory-css-searcher'
 MarkupParser = require './markup-parser'
-{CompositeDisposable} = require 'atom'
+{Range, Point, CompositeDisposable} = require 'atom'
 
 module.exports = QuickEditor =
 
@@ -35,14 +35,14 @@ module.exports = QuickEditor =
 
   quickEdit: ->
     if @panel.isVisible()
-      @quickEditorView.save()
+      @quickEditorView.close()
       @panel.hide()
     else
       identifier = @parseSelectedCSSIdentifier()
       @findFilesFromCSSIdentifier(identifier)
       .then ([text, start, end, file]) =>
         @searcher.clear()
-        @quickEditorView.setup(text, start, end, file)
+        @setupForEditing(text, start, end, file)
         @quickEditorView.open()
         @panel.show()
       .catch (e) ->
@@ -59,3 +59,13 @@ module.exports = QuickEditor =
     editor = atom.workspace.getActiveTextEditor()
     @parser.setEditor(editor)
     @parser.parse()
+
+  setupForEditing: (text, start, end, file) ->
+    @quickEditorView.setText text
+    @quickEditorView.setFile file
+    @quickEditorView.setGrammar()
+
+    range = new Range(new Point(start, 0), new Point(end, Infinity))
+    @quickEditorView.setEditRange(range)
+
+    @quickEditorView.attachEditor()

@@ -12,6 +12,11 @@ class DirectoryCSSSearcher
       "*.less"
   ]
 
+  clear: ->
+    @searchResults = []
+    @file = null
+    @matchStartLine = null
+
   findFilesThatContain:(selector) ->
     re = selector + '\\s*\\{'
     id_reg = new RegExp(re)
@@ -45,7 +50,5 @@ class DirectoryCSSSearcher
     atom.beep()
     throw new Error("No file found containing selector: " + selector)
 
-  clear: ->
-    @searchResults = []
-    @file = null
-    @matchStartLine = null
+  createNewSelector: ->
+    

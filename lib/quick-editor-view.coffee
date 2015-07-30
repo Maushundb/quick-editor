@@ -1,4 +1,5 @@
-{Point, Range, CompositeDisposable} = require 'atom'
+{Range, Point, CompositeDisposable} = require 'atom'
+$ = require 'jquery'
 
 module.exports =
 class QuickEditorView
@@ -18,7 +19,6 @@ class QuickEditorView
     @grammarReg = atom.grammars
     @subscriptions = new CompositeDisposable
 
-    @element.appendChild @textEditorView
 
   destroy: ->
     @subscriptions.dispose()
@@ -27,7 +27,10 @@ class QuickEditorView
   getElement: ->
     @element
 
-  save: ->
+  close: ->
+    @subscriptions.remove @textEditor.getBuffer().onDidChange(
+      @onBufferChangeCallback.bind(@)
+    )
     @file.read().then (content) =>
       modifyingTextEditor = document.createElement('atom-text-editor').getModel()
       modifyingTextEditor.getBuffer().setPath @file.getPath()
@@ -37,39 +40,64 @@ class QuickEditorView
       modifyingTextEditor.setTextInBufferRange(@editRange, modifiedSelector)
       modifyingTextEditor.save()
 
-  ### State Setter Methods ###
+  ### State Getter / Setter Methods ###
 
   setFile: (file) ->
     @file = file
 
   setText: (text) ->
     @text = text
+    @textEditor.setText(@text)
 
-  setHeight: () ->
+  setGrammar:  ->
+    throw new Error "Must set text & file" if @fill is null or @text is null
+    grammar = @grammarReg.selectGrammar @file.getPath(), @text
+    @textEditor.setGrammar grammar
+
+  setEditRange: (range) ->
+    @editRange = range
+
+  setHeight: ->
     lineHeight = atom.workspace.getActiveTextEditor().getLineHeightInPixels()
     numLines = @editRange.end.row - @editRange.start.row + 1 + @lineDelta
     @element.style.height = (lineHeight * numLines) + "px"
 
   ### View Methods ###
+  attachEditor: ->
+    @element.appendChild @textEditorView
 
-  setup: (text, start, end, file) ->
-    @setText(text)
-    @setFile(file)
+  setGutterNumbers: (num) ->
+    # if @lineDelta > 0
+    #   debugger
+    i = 0
+    for j in [@editRange.start.row + 1..(@editRange.end.row + @lineDelta + 1)]
+       @setRowNumber(@getRowElementByLineNumber(i), j)
+       i++
 
-    grammar = @grammarReg.selectGrammar @file.getPath(), @text
-    @textEditor.setGrammar grammar
-    @textEditor.setText @text
+    # if num < 10
+    #   cb = -> @setGutterNumbers(num + 1)
+    #   window.setTimeout(cb.bind(@), 5)
 
+  getRowElementByLineNumber: (lineNumber) ->
+    $(@textEditorView.shadowRoot).find('.line-number[data-screen-row="'+ lineNumber+ '"]')
+
+  setRowNumber: (rowElement, newNumber) ->
+    $(rowElement).html("#{newNumber}")
+
+  open: () ->
+    throw new Error "Must choose a file to quick-edit" if @file is null
     @subscriptions.add @textEditor.getBuffer().onDidChange(
       @onBufferChangeCallback.bind(@)
     )
 
-    @editRange = new Range(new Point(start, 0), new Point(end, Infinity))
 
-  open: () ->
-    throw new Error "Must choose a file to quick-edit" if @file is null
     @lineDelta = 0
     @setHeight()
+    # HACK
+    # @setGutterNumbers(0)
+    @subscriptions.add @textEditorView.attachedCallback () =>
+      @quickEditorView.setGutterNumbers(5)
+
 
   onBufferChangeCallback: (obj) ->
     if obj.newRange.isEqual @lastObj?.newRange
@@ -83,3 +111,4 @@ class QuickEditorView
     if newRows isnt oldRows
       if newRows > oldRows then @lineDelta++ else @lineDelta--
       @setHeight()
+      # @setGutterNumbers(20)
