@@ -11,10 +11,10 @@ Inspired by [Brackets](http://brackets.io/)'s quick edit feature.
 <code>shift-cmd-e</code> while the cursor is over a CSS id or class
 
 
-# TODO:
-  * Refactor to proper View
+# Coming Soon:
+  * Refactor to use space-pen View
   * Add ability to change keymap
-  * Create selector
+  * Create a selector
   * Support SASS and Stylus
   * Multiple files with same selector
   * Multiple matches in the same file
