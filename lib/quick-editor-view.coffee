@@ -67,8 +67,6 @@ class QuickEditorView
     @element.appendChild @textEditorView
 
   setGutterNumbers: (num) ->
-    if @lineDelta > 0
-      debugger
     i = 0
     for j in [@editRange.start.row + 1..(@editRange.end.row + @lineDelta + 1)]
        @setRowNumber(@getRowElementByLineNumber(i), j)
