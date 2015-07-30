@@ -67,16 +67,16 @@ class QuickEditorView
     @element.appendChild @textEditorView
 
   setGutterNumbers: (num) ->
-    # if @lineDelta > 0
-    #   debugger
+    if @lineDelta > 0
+      debugger
     i = 0
     for j in [@editRange.start.row + 1..(@editRange.end.row + @lineDelta + 1)]
        @setRowNumber(@getRowElementByLineNumber(i), j)
        i++
 
-    # if num < 10
-    #   cb = -> @setGutterNumbers(num + 1)
-    #   window.setTimeout(cb.bind(@), 5)
+    if num < 10
+      cb = -> @setGutterNumbers(num + 1)
+      window.setTimeout(cb.bind(@), 5)
 
   getRowElementByLineNumber: (lineNumber) ->
     $(@textEditorView.shadowRoot).find('.line-number[data-screen-row="'+ lineNumber+ '"]')
@@ -90,13 +90,10 @@ class QuickEditorView
       @onBufferChangeCallback.bind(@)
     )
 
-
     @lineDelta = 0
     @setHeight()
     # HACK
-    # @setGutterNumbers(0)
-    @subscriptions.add @textEditorView.attachedCallback () =>
-      @quickEditorView.setGutterNumbers(5)
+    @setGutterNumbers(0)
 
 
   onBufferChangeCallback: (obj) ->
@@ -111,4 +108,4 @@ class QuickEditorView
     if newRows isnt oldRows
       if newRows > oldRows then @lineDelta++ else @lineDelta--
       @setHeight()
-      # @setGutterNumbers(20)
+      @setGutterNumbers(0)

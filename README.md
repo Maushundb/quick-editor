@@ -12,11 +12,10 @@ Inspired by [Brackets](http://brackets.io/)'s quick edit feature.
 
 
 # TODO:
-  * Write more tests
+  * Refactor to proper View
   * Add ability to change keymap
   * Create selector
   * Support SASS and Stylus
-  * Have gutter show correct line numbers
   * Multiple files with same selector
   * Multiple matches in the same file
   * Support Jade
