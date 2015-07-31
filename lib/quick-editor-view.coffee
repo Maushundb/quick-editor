@@ -1,37 +1,37 @@
 {Range, Point, CompositeDisposable} = require 'atom'
+{$, View} = require 'atom-space-pen-views'
 AddSelectorView = require './add-selector-view'
-$ = require 'jquery'
+
 
 module.exports =
-class QuickEditorView
+class QuickEditorView extends View
 
   ### Life Cycle Methods ###
+  @content: ->
+    @div class: "quick-editor"
 
-  constructor: ->
+  initialize: ->
     [@file, @text, @editRange, @lastObj] = []
     @lineDelta = 0
-
-    @element = document.createElement 'div'
-    @element.classList.add 'quick-editor'
 
     @textEditorView = document.createElement 'atom-text-editor'
     @textEditor = @textEditorView.getModel()
 
+    @addSelectorView = new AddSelectorView
+
     @grammarReg = atom.grammars
     @subscriptions = new CompositeDisposable
 
+  attached: ->
 
   destroy: ->
     @subscriptions.dispose()
-    @element.remove()
-
-  getElement: ->
-    new AddSelectorView
 
   close: ->
     @subscriptions.remove @textEditor.getBuffer().onDidChange(
       @onBufferChangeCallback.bind(@)
     )
+    @detachPreviousView()
     @file.read().then (content) =>
       modifyingTextEditor = document.createElement('atom-text-editor').getModel()
       modifyingTextEditor.getBuffer().setPath @file.getPath()
@@ -65,10 +65,17 @@ class QuickEditorView
 
   ### View Methods ###
   attachEditor: ->
-    @element.appendChild @textEditorView
+    this.append @textEditorView
+    @setGutterNumbers(-1)
 
   attachAddSelectorView: ->
-    @element.appendChild new AddSelectorView
+    this.append()
+
+  detachPreviousView: ->
+    previousView = $(this).find(':first-child')
+    debugger
+    if previousView.length
+      previousView.detach()
 
   setGutterNumbers: (num) ->
     i = 0
@@ -76,8 +83,11 @@ class QuickEditorView
        @setRowNumber(@getRowElementByLineNumber(i), j)
        i++
 
-    if num < 10
-      cb = -> @setGutterNumbers(num + 1)
+    if num > 0
+      # This is s horrible hack. There is no callback to listen to
+      # when gutter numbers change, so this had to be done to keep the
+      # gutter numbers updated.
+      cb = -> @setGutterNumbers(num - 1)
       window.setTimeout(cb.bind(@), 5)
 
   getRowElementByLineNumber: (lineNumber) ->
@@ -94,9 +104,6 @@ class QuickEditorView
 
     @lineDelta = 0
     @setHeight()
-    # HACK
-    @setGutterNumbers(0)
-
 
   onBufferChangeCallback: (obj) ->
     if obj.newRange.isEqual @lastObj?.newRange
@@ -110,4 +117,4 @@ class QuickEditorView
     if newRows isnt oldRows
       if newRows > oldRows then @lineDelta++ else @lineDelta--
       @setHeight()
-      @setGutterNumbers(0)
+      @setGutterNumbers(5)

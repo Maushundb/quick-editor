@@ -14,7 +14,7 @@ module.exports = QuickEditor =
 
   activate: (state) ->
     @quickEditorView = new quickEditorView()
-    @panel = atom.workspace.addBottomPanel(item: @quickEditorView.getElement(), visible: false)
+    @panel = atom.workspace.addBottomPanel(item: @quickEditorView, visible: false)
 
     @searcher = new DirectoryCSSSearcher
     @parser = new MarkupParser
@@ -35,11 +35,9 @@ module.exports = QuickEditor =
 
   quickEdit: ->
     if @panel.isVisible()
-      # @quickEditorView.close()
+      @quickEditorView.close()
       @panel.hide()
     else
-      @panel.show()
-      return
       identifier = @parseSelectedCSSIdentifier()
       @findFilesFromCSSIdentifier(identifier)
       .then ([text, start, end, file]) =>
@@ -47,6 +45,7 @@ module.exports = QuickEditor =
         @setupForEditing(text, start, end, file)
         @quickEditorView.open()
         @panel.show()
+        @quickEditorView.attachEditor()
       .catch (e) ->
         console.error(e.message, e.stack)
 
@@ -69,5 +68,3 @@ module.exports = QuickEditor =
 
     range = new Range(new Point(start, 0), new Point(end, Infinity))
     @quickEditorView.setEditRange(range)
-
-    @quickEditorView.attachEditor()

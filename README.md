@@ -27,7 +27,6 @@ This can be edited by defining a keybinding as follows
 # Release Notes: [here](./CHANGELOG.md)
 
 # Coming Soon:
-  * Refactor to use space-pen View
   * Create a selector
   * Support SASS and Stylus
   * Multiple files with same selector

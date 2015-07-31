@@ -21,6 +21,6 @@
     "atom": ">=1.0.0 <2.0.0"
   },
   "dependencies": {
-    "jquery": "^2.1.4"
+    "atom-space-pen-views": "^2.0.5"
   }
 }
