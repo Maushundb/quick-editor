@@ -12,9 +12,9 @@ class AddSelectorView extends View
           @h2 "Add New Selector"
           @div class: "no-selector-container", =>
             @div class: "no-selector-text", "No selector was found for: "
-            @div class: "selector", ".test-class"
+            @div class: "selector", ".test-class" 
         @div class: "top-container-right", =>
-          @div class: "btn", "Add"
+          @div class: "btn", click: "onSelectorAdded", "Add"
       @div class: "add-new-style-container", =>
         @div class: "add-new-selector-text", "Add new selector in:"
         @subview 'pathEditorView', new TextEditorView(mini: true)
@@ -31,3 +31,6 @@ class AddSelectorView extends View
 
 
   detached: ->
+
+  onSelectorAdded: ->
+    atom.confirm(message: "HEY")
