@@ -1,4 +1,5 @@
 {Range, Point, CompositeDisposable} = require 'atom'
+AddSelectorView = require './add-selector-view'
 $ = require 'jquery'
 
 module.exports =
@@ -25,7 +26,7 @@ class QuickEditorView
     @element.remove()
 
   getElement: ->
-    @element
+    new AddSelectorView
 
   close: ->
     @subscriptions.remove @textEditor.getBuffer().onDidChange(
@@ -65,6 +66,9 @@ class QuickEditorView
   ### View Methods ###
   attachEditor: ->
     @element.appendChild @textEditorView
+
+  attachAddSelectorView: ->
+    @element.appendChild new AddSelectorView
 
   setGutterNumbers: (num) ->
     i = 0

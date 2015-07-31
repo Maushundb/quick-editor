@@ -35,9 +35,11 @@ module.exports = QuickEditor =
 
   quickEdit: ->
     if @panel.isVisible()
-      @quickEditorView.close()
+      # @quickEditorView.close()
       @panel.hide()
     else
+      @panel.show()
+      return
       identifier = @parseSelectedCSSIdentifier()
       @findFilesFromCSSIdentifier(identifier)
       .then ([text, start, end, file]) =>
