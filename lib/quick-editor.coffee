@@ -1,7 +1,7 @@
 quickEditorView = require './quick-editor-view'
 DirectoryCSSSearcher = require './directory-css-searcher'
 MarkupParser = require './markup-parser'
-{Range, Point, CompositeDisposable} = require 'atom'
+{Range, Point, CompositeDisposable, TextBuffer, File} = require 'atom'
 
 module.exports = QuickEditor =
 
@@ -12,8 +12,9 @@ module.exports = QuickEditor =
   searcher : null
   parser: null
 
-  activate: (state) ->
+  activate: ->
     @quickEditorView = new quickEditorView()
+    @quickEditorView.setOnSelectorAdded(@selectorAdded.bind(@))
     @panel = atom.workspace.addBottomPanel(item: @quickEditorView, visible: false)
 
     @searcher = new DirectoryCSSSearcher
@@ -35,28 +36,30 @@ module.exports = QuickEditor =
 
   quickEdit: ->
     if @panel.isVisible()
-      @quickEditorView.close()
+      @closeView(@found)
       @panel.hide()
     else
-      identifier = @parseSelectedCSSIdentifier()
-      @findFilesFromCSSIdentifier(identifier)
-      .then ([text, start, end, file]) =>
+      @selector = @parseSelectedCSSSelector()
+      @findFilesFromCSSIdentifier(@selector)
+      .then ([found, result]) =>
+        @found = found
         @searcher.clear()
-        @setupForEditing(text, start, end, file)
-        @quickEditorView.open()
-        @panel.show()
-        @quickEditorView.attachEditor()
+        if @found
+          @setupForEditing(result.text, result.start, result.end, result.file)
+          @edit()
+        else
+          @addNewSelector(@selector)
       .catch (e) ->
         console.error(e.message, e.stack)
 
   findFilesFromCSSIdentifier:(identifier) ->
     @searcher.findFilesThatContain identifier
     .then () =>
-      @searcher.getSelectorText()
+        @searcher.getSelectorText()
     .catch (e) ->
       throw e
 
-  parseSelectedCSSIdentifier: ->
+  parseSelectedCSSSelector: ->
     editor = atom.workspace.getActiveTextEditor()
     @parser.setEditor(editor)
     @parser.parse()
@@ -68,3 +71,36 @@ module.exports = QuickEditor =
 
     range = new Range(new Point(start, 0), new Point(end, Infinity))
     @quickEditorView.setEditRange(range)
+
+  edit: ->
+    @panel.show()
+    @quickEditorView.attachEditorView()
+
+  addNewSelector: (selector) ->
+    @quickEditorView.attachAddSelectorView(selector, "/Users/BrandonM/Documents/Personal/quick-editor/spec/fixtures/test.less")
+    @panel.show()
+
+  selectorAdded: (path, selector) ->
+    file = new File(path, false)
+    buffer = new TextBuffer()
+    buffer.setPath(path)
+    file.read()
+    .then (text) =>
+      buffer.setText(text) #TODO more efficent way to do this without researching
+      buffer.append("\n" + selector + " {\n\n}")
+      buffer.save()
+      @closeView(false)
+      @panel.hide()
+      @findFilesFromCSSIdentifier(selector)
+      .then ([found, result]) =>
+        @found = found
+        @searcher.clear()
+        @setupForEditing(result.text, result.start, result.end, result.file)
+        @edit()
+
+
+  closeView: (edit) ->
+    if edit
+      @quickEditorView.detachEditorView()
+    else
+      @quickEditorView.detachAddSelectorView()

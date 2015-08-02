@@ -15,6 +15,6 @@ describe "DirectoryCSSSearcher", ->
   it "should return the proper range of a selector", ->
     waitsForPromise -> dcs.findFilesThatContain(".test-class")
     runs ->
-      dcs.getSelectorText().then ([text, start, end, file]) ->
-        expect(start).toBe(1)
-        expect(end).toBe(5)
+      dcs.getSelectorText().then (success, result) ->
+        expect(result.start).toBe(1)
+        expect(result.end).toBe(5)

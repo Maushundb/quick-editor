@@ -27,20 +27,6 @@ class QuickEditorView extends View
   destroy: ->
     @subscriptions.dispose()
 
-  close: ->
-    @subscriptions.remove @textEditor.getBuffer().onDidChange(
-      @onBufferChangeCallback.bind(@)
-    )
-    @detachPreviousView()
-    @file.read().then (content) =>
-      modifyingTextEditor = document.createElement('atom-text-editor').getModel()
-      modifyingTextEditor.getBuffer().setPath @file.getPath()
-      modifyingTextEditor.setText content
-
-      modifiedSelector = @textEditor.getText()
-      modifyingTextEditor.setTextInBufferRange(@editRange, modifiedSelector)
-      modifyingTextEditor.save()
-
   ### State Getter / Setter Methods ###
 
   setFile: (file) ->
@@ -58,22 +44,55 @@ class QuickEditorView extends View
   setEditRange: (range) ->
     @editRange = range
 
-  setHeight: ->
-    lineHeight = atom.workspace.getActiveTextEditor().getLineHeightInPixels()
-    numLines = @editRange.end.row - @editRange.start.row + 1 + @lineDelta
-    @element.style.height = (lineHeight * numLines) + "px"
+  setHeight: (edit)->
+    if edit
+      lineHeight = atom.workspace.getActiveTextEditor().getLineHeightInPixels()
+      numLines = @editRange.end.row - @editRange.start.row + 1 + @lineDelta
+      @element.style.height = (lineHeight * numLines) + "px"
+    else
+      @element.style.height = "90px"
+
+  setOnSelectorAdded: (callback) ->
+    @addSelectorView.onSelectorAdded = callback
 
   ### View Methods ###
-  attachEditor: ->
+  attachEditorView: ->
+    throw new Error "Must choose a file to quick-edit" if @file is null
     this.append @textEditorView
     @setGutterNumbers(-1)
+    @subscriptions.add @textEditor.getBuffer().onDidChange(
+      @onBufferChangeCallback.bind(@)
+    )
 
-  attachAddSelectorView: ->
-    this.append()
+    @lineDelta = 0
+    @setHeight(true)
 
-  detachPreviousView: ->
-    previousView = $(this).find(':first-child')
-    debugger
+  attachAddSelectorView: (selector, path)->
+    @addSelectorView.setSelector(selector)
+    @addSelectorView.setInitialPath(path)
+    this.append @addSelectorView
+    @setHeight(false)
+
+  detachEditorView: ->
+    @detachPreviousView()
+    @subscriptions.remove @textEditor.getBuffer().onDidChange(
+      @onBufferChangeCallback.bind(@)
+    )
+    @file.read().then (content) =>
+      modifyingTextEditor = document.createElement('atom-text-editor').getModel()
+      modifyingTextEditor.getBuffer().setPath @file.getPath()
+      modifyingTextEditor.setText content
+
+      modifiedSelector = @textEditor.getText()
+      modifyingTextEditor.setTextInBufferRange(@editRange, modifiedSelector)
+      modifyingTextEditor.save()
+
+  detachAddSelectorView: ->
+    @detachPreviousView()
+    return
+
+  detachPreviousView: -> #might want to make this remove isntead
+    previousView = $(@element).children()
     if previousView.length
       previousView.detach()
 
@@ -96,15 +115,6 @@ class QuickEditorView extends View
   setRowNumber: (rowElement, newNumber) ->
     $(rowElement).html("#{newNumber}")
 
-  open: () ->
-    throw new Error "Must choose a file to quick-edit" if @file is null
-    @subscriptions.add @textEditor.getBuffer().onDidChange(
-      @onBufferChangeCallback.bind(@)
-    )
-
-    @lineDelta = 0
-    @setHeight()
-
   onBufferChangeCallback: (obj) ->
     if obj.newRange.isEqual @lastObj?.newRange
       if obj.oldRange.isEqual @lastObj?.oldRange
@@ -116,5 +126,5 @@ class QuickEditorView extends View
     oldRows = obj.oldRange.end.row - obj.oldRange.start.row
     if newRows isnt oldRows
       if newRows > oldRows then @lineDelta++ else @lineDelta--
-      @setHeight()
+      @setHeight(true)
       @setGutterNumbers(5)
