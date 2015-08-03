@@ -60,7 +60,5 @@ class MarkupParser
     return prefix + selector
 
   textNotCSSIdentifier: ->
-    atom.beep()
     e = new Error "Selected text is not a CSS identifier"
-    console.error(e.stack)
     throw e

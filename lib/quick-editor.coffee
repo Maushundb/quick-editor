@@ -1,6 +1,7 @@
 quickEditorView = require './quick-editor-view'
 DirectoryCSSSearcher = require './directory-css-searcher'
 MarkupParser = require './markup-parser'
+QuickEditorCache = require './quick-editor-cache'
 {Range, Point, CompositeDisposable, TextBuffer, File} = require 'atom'
 
 module.exports = QuickEditor =
@@ -19,6 +20,7 @@ module.exports = QuickEditor =
 
     @searcher = new DirectoryCSSSearcher
     @parser = new MarkupParser
+    @cssCache = new QuickEditorCache
 
     # Events subscribed to in atom's system can be easily cleaned up with a CompositeDisposable
     @subscriptions = new CompositeDisposable
@@ -39,12 +41,15 @@ module.exports = QuickEditor =
       @closeView(@found)
       @panel.hide()
     else
-      @selector = @parseSelectedCSSSelector()
+      try
+        @selector = @parseSelectedCSSSelector()
+      catch e
+        atom.beep()
+        console.warn(e.message)
+        return
       @findFilesFromCSSIdentifier(@selector)
       .then ([found, result]) =>
-        @found = found
-        @searcher.clear()
-        if @found
+        if found
           @setupForEditing(result.text, result.start, result.end, result.file)
           @edit()
         else
@@ -54,10 +59,15 @@ module.exports = QuickEditor =
 
   findFilesFromCSSIdentifier:(identifier) ->
     @searcher.findFilesThatContain identifier
-    .then () =>
-        @searcher.getSelectorText()
+    .then () => @searcher.getSelectorText().then ([found, result]) =>
+        @found = found
+        @searcher.clear()
+        if found
+          path = atom.workspace.getActiveTextEditor().getPath()
+          @cssCache.put(path, result.file.getPath())
+        return [found, result]
     .catch (e) ->
-      throw e
+      console.error(e.message, e.stack)
 
   parseSelectedCSSSelector: ->
     editor = atom.workspace.getActiveTextEditor()
@@ -77,7 +87,9 @@ module.exports = QuickEditor =
     @quickEditorView.attachEditorView()
 
   addNewSelector: (selector) ->
-    @quickEditorView.attachAddSelectorView(selector, "/Users/BrandonM/Documents/Personal/quick-editor/spec/fixtures/test.less")
+    unless path = @cssCache.get(atom.workspace.getActiveTextEditor().getPath())
+      path = atom.project.getPaths()[0]
+    @quickEditorView.attachAddSelectorView(selector, path)
     @panel.show()
 
   selectorAdded: (path, selector) ->
@@ -93,8 +105,6 @@ module.exports = QuickEditor =
       @panel.hide()
       @findFilesFromCSSIdentifier(selector)
       .then ([found, result]) =>
-        @found = found
-        @searcher.clear()
         @setupForEditing(result.text, result.start, result.end, result.file)
         @edit()
 

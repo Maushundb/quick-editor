@@ -50,6 +50,5 @@ class DirectoryCSSSearcher
                 end: lineNumber,
                 file: @file}]
     else
-      return [false,
-              {text: null, start: null, end: null, file: null}]
-              
+      return new Promise (resolve, reject) ->
+        resolve([false, {text: null, start: null, end: null, file: null}])

@@ -38,4 +38,5 @@ class AddSelectorView extends View
 
   onAddClick: ->
     path = @pathEditor.getText()
+    # ERROR CHECK THE PATH
     @onSelectorAdded(path, @selector)
