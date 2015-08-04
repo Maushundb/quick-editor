@@ -1,4 +1,5 @@
 {$, View, TextEditorView} = require 'atom-space-pen-views'
+{File, Directory} = require 'atom'
 
 module.exports =
 class AddSelectorView extends View
@@ -20,8 +21,6 @@ class AddSelectorView extends View
         @div class: "add-new-selector-text", "Add new selector in:"
         @subview 'pathEditorView', new TextEditorView(mini: true)
 
-
-
   initialize: ->
     @pathEditor = @pathEditorView.getModel()
 
@@ -34,9 +33,12 @@ class AddSelectorView extends View
   setInitialPath: (path) ->
     @pathEditor.setText path
 
-  detached: ->
-
   onAddClick: ->
     path = @pathEditor.getText()
-    # ERROR CHECK THE PATH
-    @onSelectorAdded(path, @selector)
+    file = new File(path) #TODO could get weird behavior if directory
+    file.exists().then (exists) =>
+      if exists
+        @onSelectorAdded(path, @selector)
+      else
+        atom.beep()
+        atom.confirm(message: "File does not exist:\n" + path)

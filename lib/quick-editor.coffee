@@ -18,9 +18,9 @@ module.exports = QuickEditor =
     @quickEditorView.setOnSelectorAdded(@selectorAdded.bind(@))
     @panel = atom.workspace.addBottomPanel(item: @quickEditorView, visible: false)
 
+    @cssCache = new QuickEditorCache
     @searcher = new DirectoryCSSSearcher
     @parser = new MarkupParser
-    @cssCache = new QuickEditorCache
 
     # Events subscribed to in atom's system can be easily cleaned up with a CompositeDisposable
     @subscriptions = new CompositeDisposable

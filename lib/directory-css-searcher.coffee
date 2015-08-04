@@ -1,6 +1,7 @@
 {File} = require 'atom'
 module.exports =
 class DirectoryCSSSearcher
+
   constructor: ->
     @searchResults = []
     @file = null
@@ -26,6 +27,7 @@ class DirectoryCSSSearcher
       filePath = @searchResults[0].filePath
       @matchStartLine = @searchResults[0].matches[0].range[0][0]
       @file = new File filePath, false
+
 
   matchCallback: (match) ->
     @searchResults.push(match)

@@ -24,10 +24,18 @@ This can be edited by defining a keybinding as follows
 ```
 
 
-# Release Notes: [here](./CHANGELOG.md)
+# Release Notes:
+### 0.3.0
+* Added the ability to add a new selector
+
+### 0.2.0
+* Improved selector parsing accuracy, refactored into parser
+* Gutter numbers reflect the style's actual position in their respective file
+* Wrote more tests
+
+Full change log [here](./CHANGELOG.md)
 
 # Coming Soon:
-  * Create a selector
   * Support SASS and Stylus
   * Multiple files with same selector
   * Multiple matches in the same file
