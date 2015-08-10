@@ -114,3 +114,7 @@ module.exports = QuickEditor =
       @quickEditorView.detachEditorView()
     else
       @quickEditorView.detachAddSelectorView()
+
+  ### Methods for testing ###
+  getView: ->
+    return @quickEditorView

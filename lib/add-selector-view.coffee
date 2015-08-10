@@ -35,7 +35,9 @@ class AddSelectorView extends View
 
   onAddClick: ->
     path = @pathEditor.getText()
-    file = new File(path) #TODO could get weird behavior if directory
+    file = new File(path)
+    # TODO could get weird behavior if directory. Refer to
+    # https://iojs.org/api/fs.html#fs_fs_statsync_path
     file.exists().then (exists) =>
       if exists
         @onSelectorAdded(path, @selector)

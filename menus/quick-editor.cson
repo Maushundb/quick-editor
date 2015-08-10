@@ -2,21 +2,7 @@
 'context-menu':
   'atom-text-editor': [
     {
-      'label': 'Toggle quick-editor'
-      'command': 'quick-editor:toggle'
+      'label': 'Quick-Edit'
+      'command': 'quick-editor:quick-edit'
     }
   ]
-'menu': [
-  {
-    'label': 'Packages'
-    'submenu': [
-      'label': 'quick-editor'
-      'submenu': [
-        {
-          'label': 'Toggle'
-          'command': 'quick-editor:toggle'
-        }
-      ]
-    ]
-  }
-]

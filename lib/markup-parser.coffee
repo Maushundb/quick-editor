@@ -44,6 +44,8 @@ class MarkupParser
         outOfSelector = true
         outerQuote = lastQuote
 
+    @textNotCSSIdentifier() if not prefix?
+
     # set i to beginning of the selected class or id
     for i in [startCol..0]
       if line[i] is outerQuote or line[i] is " "

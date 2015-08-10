@@ -72,3 +72,9 @@ describe "MarkupParser", ->
 
     expect(result1).toBe("\\.testc")
     expect(result2).toBe("#testi")
+
+  it "throws an error when class or id is not present", ->
+    testLine = "<h2><%= link_to \"Sign In\", some_path %></h2>"
+    testPos = [0, 20]
+    setupTextEditor(testLine, testPos)
+    expect(parser.parse).toThrow()

@@ -28,10 +28,15 @@ describe "QuickEditor", ->
     runs(callback)
 
   describe "when a quick-editor:quick-edit event is triggered", ->
-    it "should activate", ->
+    it "activates", ->
       activateAndThen ->
         expect(workspaceView.querySelector(".quick-editor")).toExist()
 
-    it "should show a panel", ->
+    it "shows a panel", ->
       activateAndThen ->
           waitsFor -> workspaceView.querySelector ".quick-editor"
+
+    it "correctly parses it's editors selected css identifier", ->
+      activateAndThen ->
+        selector = QuickEditor.parseSelectedCSSSelector()
+        expect(selector).toBe("#test-class")
