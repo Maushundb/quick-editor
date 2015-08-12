@@ -5,16 +5,23 @@ describe "DirectoryCSSSearcher", ->
   dcs = null
 
   beforeEach ->
+    atom.config.set('quick-editor.stylesDirectory', atom.project.getPaths()[0])
     dcs = new DirectoryCSSSearcher
 
-  it "should find files containing a specific Regex", ->
+  it "finds files containing a specific Regex", ->
     waitsForPromise -> dcs.findFilesThatContain(".test-class")
     runs ->
       expect(dcs.file.getBaseName()).toBe("test.less")
 
-  it "should return the proper range of a selector", ->
+  it "returns the proper range of a selector", ->
     waitsForPromise -> dcs.findFilesThatContain(".test-class")
     runs ->
       dcs.getSelectorText().then (success, result) ->
         expect(result.start).toBe(1)
         expect(result.end).toBe(5)
+
+  it "only searches the specified styles directory", ->
+    waitsForPromise -> dcs.findFilesThatContain(".false-class")
+    runs ->
+      dcs.getSelectorText().then (success, result) ->
+        expect(result.success).toBe(false)

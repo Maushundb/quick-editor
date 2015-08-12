@@ -6,6 +6,11 @@ QuickEditorCache = require './quick-editor-cache'
 
 module.exports = QuickEditor =
 
+  config:
+    stylesDirectory:
+      type: 'string'
+      default: ''
+
   ### Life Cycle Methods ###
   quickEditorView : null
   panel : null

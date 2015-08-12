@@ -1,11 +1,13 @@
-{File} = require 'atom'
+{File, Directory} = require 'atom'
+SearcherCache = require './searcher-cache'
 module.exports =
 class DirectoryCSSSearcher
 
-  constructor: ->
+  constructor:  ->
     @searchResults = []
     @file = null
     @matchStartLine = null
+    @cache = new SearcherCache
 
   supportedFileExtensions: [
       "*.css"
@@ -21,12 +23,31 @@ class DirectoryCSSSearcher
   findFilesThatContain:(selector) ->
     re = selector + '\\s*\\{'
     id_reg = new RegExp(re)
-    atom.workspace.scan id_reg, {paths: @supportedFileExtensions}, @matchCallback.bind(@)
+
+    if atom.config.get('quick-editor.stylesDirectory') is ''
+      paths = atom.project.getDirectories()
+    else
+      paths = [new Directory(atom.config.get('quick-editor.stylesDirectory'))]
+
+    atom.workspace.defaultDirectorySearcher.search(
+      paths,
+      id_reg,
+      {
+        didMatch: @matchCallback.bind(@),
+        didError: (e) -> console.error e.stack
+        didSearchPaths: (n) -> return
+        inclusions: @supportedFileExtensions
+      }
+    )
     .then () =>
       return unless @searchResults.length
       filePath = @searchResults[0].filePath
       @matchStartLine = @searchResults[0].matches[0].range[0][0]
       @file = new File filePath, false
+
+
+  searchCache: ->
+    #TODO Implement me
 
 
   matchCallback: (match) ->
