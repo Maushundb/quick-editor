@@ -22,27 +22,29 @@ This can be edited by defining a keybinding as follows
 'atom-text-editor':
   'shift-cmd-e': 'quick-editor:quick-edit'
 ```
+# Settings
+#### Styles Directory
+Specify an absolute path to your styles directory when working in a large project to improve performance.
 
 
 # Release Notes:
-### 0.3.0
-* Added the ability to add a new selector
+## 0.4.0
+* Added the ability to specify a styles directory to improve performance on larger projects
+* Fixed bug with context menu not working
+* Fixed bug with markup parsing
 
-### 0.2.0
-* Improved selector parsing accuracy, refactored into parser
-* Gutter numbers reflect the style's actual position in their respective file
-* Wrote more tests
+## 0.3.0
+* Added the ability to add a new selector
 
 ###Full change log [here](./CHANGELOG.md)
 
 # Coming Soon:
-  * Specifying a styles directory for larger projects to reduce search time
-  * Hash option for larger projects
+  * Multiple files with same selector
+  * Caching for larger projects
   * Show the name of CSS file
   * Link to open in new tab
   * Editor updates when changed in another file at the same time
   * Support SASS and Stylus
-  * Multiple files with same selector
   * Multiple matches in the same file
   * Support Jade
   * Add support for javascript functions

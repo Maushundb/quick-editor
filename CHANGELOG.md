@@ -1,3 +1,8 @@
+## 0.4.0
+* Added the ability to specify a styles directory to improve performance on larger projects
+* Fixed bug with context menu not working
+* Fixed bug with markup parsing
+
 ## 0.3.0
 * Added the ability to add a new selector
 
