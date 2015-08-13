@@ -4,9 +4,13 @@ File = require 'atom'
 describe "DirectoryCSSSearcher", ->
   dcs = null
 
+
   beforeEach ->
-    atom.config.set('quick-editor.stylesDirectory', atom.project.getPaths()[0])
-    dcs = new DirectoryCSSSearcher
+    waitsForPromise ->
+      atom.workspace.open()
+    runs ->
+      atom.config.set('quick-editor.stylesDirectory', atom.project.getPaths()[0])
+      dcs = new DirectoryCSSSearcher
 
   it "finds files containing a specific Regex", ->
     waitsForPromise -> dcs.findFilesThatContain(".test-class")

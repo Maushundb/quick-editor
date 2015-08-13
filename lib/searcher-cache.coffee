@@ -9,5 +9,19 @@ class SearcherCache extends QuickEditorCache
   ###
   put: (key, value) ->
     unless @containsKey(key)
-      @cache[key] = []
-    @cache[key].push(value)
+      @cache[key] = new Set()
+    @cache[key].add(value)
+
+  get: (key) ->
+    ###
+    Returns an array of all the values in the key's associated set.
+    ###
+    if @cache[key] isnt undefined
+      valueArray = []
+      it = @cache[key].values()
+      next = it.next()
+      while not next.done
+        valueArray.push(next.value)
+        next = it.next()
+      return valueArray
+    else null

@@ -19,3 +19,6 @@ class QuickEditorCache
 
   containsKey: (key) ->
      if @cache[key] isnt undefined then return true else return false
+
+  invalidate: ->
+    @cache = {}
