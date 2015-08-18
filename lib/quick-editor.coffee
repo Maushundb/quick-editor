@@ -63,6 +63,7 @@ module.exports = QuickEditor =
         console.error(e.message, e.stack)
 
   findFilesFromCSSIdentifier:(identifier) ->
+    #TODO changeME
     @searcher.findFilesThatContain identifier
     .then () => @searcher.getSelectorText().then ([found, result]) =>
         @found = found

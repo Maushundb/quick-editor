@@ -1,6 +1,4 @@
 {File, Directory} = require 'atom'
-SearcherCache = require './searcher-cache'
-chokidar = require('chokidar')
 
 module.exports =
 class DirectoryCSSSearcher
@@ -9,7 +7,6 @@ class DirectoryCSSSearcher
     @searchResults = []
     @file = null
     @matchStartLine = null
-    @cache = new SearcherCache
 
   supportedFileExtensions: [
       "*.css"
@@ -25,8 +22,6 @@ class DirectoryCSSSearcher
   findFilesThatContain:(selector) ->
     re = selector + '\\s*\\{'
     id_reg = new RegExp(re)
-
-    #TODO check the cache
 
     if atom.config.get('quick-editor.stylesDirectory') is ''
       paths = atom.project.getDirectories()
@@ -44,20 +39,11 @@ class DirectoryCSSSearcher
       }
     )
     .then () =>
+      #TODO refactor for interchangable class that can be switched SASS
       return unless @searchResults.length
-      @cacheResult()
       filePath = @searchResults[0].filePath
       @matchStartLine = @searchResults[0].matches[0].range[0][0]
       @file = new File filePath, false
-
-  cacheResult: ->
-    markupFilePath = atom.workspace.getActiveTextEditor().getPath()
-    for result in @searchResults
-      @cache.put(markupFilePath, result.filePath)
-
-
-  searchCache: ->
-    #TODO Implement me
 
 
   matchCallback: (match) ->
