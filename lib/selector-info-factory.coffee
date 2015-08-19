@@ -7,36 +7,52 @@ class SelectorInfoFactory
   #                                separated selector groups like "h1, h2"
   #                                are broken into separate selectors)
   # * `selectorGroup`              the entire selector group containing this
-  #                                selector, or undefined if there is only one
-  #                                selector in the rule.
+  #                                selector. Same as selector if only one.
   # * `selectorStartRow` {Int}     the row the selector text starts
   # * `selectorStartCol` {Int}     the column  the selector text starts
   # * `selectorEndRow` {Int}       the row the selector text ends
   # * `selectorEndCol` {Int}       the column  the selector text ends
   # * `ruleStartRow` {Int}         the row the style rule i.e. "{" begins
   # * `ruleStartCol` {Int}         the column the style rule ends
+  # * `declListStartRow' {Int}     row where the declaration list for the rule
+  #                                starts
+  # * `declListStartCol` {Int}     column in line where the declaration list for
+  #                                the rule starts
+  # * `declListEndRow` {Int}       line where the declaration list for the rule
+  #                                ends
+  # * `declListEndCol` {Int}       column in the line where the declaration list
+  #                                for the rule ends
   # * `filePath` {String}          the path to the file containing this selector
-  constructor: ->
+  constructor: (@path) ->
     @reset()
 
   reset: ->
-    selector, selectorGroup,
-    selectorStartRow, selectorStartCol, selectorEndRow, selectorEndCol,
-    ruleStartRow, ruleStartCol, filePath = []
+    @selector, @selectorGroup,
+    @selectorStartRow, @selectorStartCol, @selectorEndRow, @selectorEndCol,
+    @ruleStartRow, @ruleStartCol = []
 
-    id = clss = tag = off
+    @id = @clss = @tag = off
 
-  setId: ->
-    @valueSet() if (clss or tag)
+  setId: (r, c)->
+    @valueSet() if (@clss or @tag)
     @id = on
+    @setSelectorStartRow(r)
+    @setSelectorStartCol(c)
 
-  setClass: ->
-    @valueSet() if (id or tag)
+  setClass: (r, c)->
+    @valueSet() if (@id or @tag)
     @clss = on
+    @setSelectorStartRow(r)
+    @setSelectorStartCol(c)
 
-  setTag: ->
-    @valueSet() if (clss or id)
+  setTag: (r, c) ->
+    @valueSet() if (@clss or @id)
     @tag = on
+    @setSelectorStartRow(r)
+    @setSelectorStartCol(c)
+
+  typeSet: ->
+    return @id or @clss or @tag
 
   addSelectorText: (c) ->
     @selector ?= ''
@@ -70,13 +86,28 @@ class SelectorInfoFactory
     @valueSet("ruleStartCol") if @ruleStartCol?
     @ruleStartCol = c
 
-  setFilePath: (p) ->
-    @valueSet("filePath") if @filePath?
-    @filePath = p
-
   create: ->
-    #IMPLEMENT ME
+    si = {
+      selector: @selector
+      selectorGroup: @selectorGroup
+      selectorStartRow: @selectorStartRow
+      selectorStartCol: @selectorStartCol
+      selectorEndRow: @selectorEndRow
+      selectorEndCol: @selectorEndCol
+      ruleStartRow: @ruleStartRow
+      ruleStartCol: @ruleStartCol
+      declListStartRow: @declListStartRow
+      declListStartCol: @declListStartCol
+      declListEndRow: @declListEndRow
+      declListEndCol: @declListEndCol
+      filePath: @path
+    }
+    for key, val in si
+      throw new Error "incomplete selector info" if not val?
+    return si
 
+  clone: ->
+    return JSON.parse(JSON.stringify(@))
 
   valueSet: (val)->
     throw new Error("value has already been set: " + val)
