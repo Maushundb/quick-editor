@@ -34,14 +34,14 @@ class DirectoryIndexer
       directories = atom.project.getDirectories()
     else
       directories = [new Directory(atom.config.get('quick-editor.stylesDirectory'))]
-    indexDirectory(dir) for dir in directories
+    @indexDirectory(dir) for dir in directories
 
   # Indexes the given directory
   # * `dir` the {Directory} to be indexed
   #
   # Throws error if directory cannot be opened
   indexDirectory: (dir) ->
-    dir.getEntries().then (error, entries) ->
+    dir.getEntries (error, entries) =>
       if error isnt null
         console.error(error, error.stack)
         throw error
@@ -55,17 +55,17 @@ class DirectoryIndexer
   # Creates a mapping of all the selectors in the given file
   # * `file` the {File} to index
   indexFile: (file) ->
-    ext = file.getBaseName().split(".").slice(-1)
-    return if ext isnt in @supportedFileExtensions
-    file.read().then (text) ->
-      file.getRealPath().then (path) ->
-        selectorList = extractAllSelectors(text, ext, path)
-        for selectorInfo in selectorList
-          i = @nextInfoIndex++
-          @selectorInfos[i] = selectorInfo
-          @selectorIndex.put(selectorInfo.selector, i)
-          @fileIndex.put(file, i)
-
+    ext = file.getBaseName().split(".").pop()
+    return if not (ext in @supportedFileExtensions)
+    file.read().then (text) => file.getRealPath().then (path) =>
+      selectorList = @extractAllSelectors(text, ext, path)
+      for selectorInfo in selectorList
+        i = @nextInfoIndex++
+        @selectorInfos[i] = selectorInfo
+        @selectorIndex.put(selectorInfo.selector, i)
+        @fileIndex.put(file, i)
+    .catch (e) ->
+      console.error(e, e.stack)
 
   # Extracts all the selectors from the given file text
   # * `text` {String} the text of a given style file
@@ -76,17 +76,18 @@ class DirectoryIndexer
   #                                separated selector groups like "h1, h2"
   #                                are broken into separate selectors)
   # * `selectorGroup`              the entire selector group containing this
-  #                                selector, or undefined if there is only one
-  #                                selector in the rule.
+  #                                selector. Same as selector if only one.
   # * `selectorStartRow` {Int}     the row the selector text starts
   # * `selectorStartCol` {Int}     the column  the selector text starts
   # * `selectorEndRow` {Int}       the row the selector text ends
   # * `selectorEndCol` {Int}       the column  the selector text ends
-  # * `ruleStartRow` {Int}         the row the style rule i.e. "{" begins
-  # * `ruleStartCol` {Int}         the column the style rule ends
+  # * `ruleStartRow` {Int}         the row the style rule i.e. after "{" starts
+  # * `ruleStartCol` {Int}         the column the style rule starts
+  # * `ruleEndRow' {Int}           row where the rule ends
+  # * `ruleEndCol` {Int}           column where the rule ends
   # * `filePath` {String}          the path to the file containing this selector
   extractAllSelectors: (text, ext, path) ->
-    if ext is "sass":
+    if ext is "sass"
       return #TODO
     else
       parser = new CssLessScssParser(path)

@@ -12,44 +12,32 @@ class SelectorInfoFactory
   # * `selectorStartCol` {Int}     the column  the selector text starts
   # * `selectorEndRow` {Int}       the row the selector text ends
   # * `selectorEndCol` {Int}       the column  the selector text ends
-  # * `ruleStartRow` {Int}         the row the style rule i.e. "{" begins
-  # * `ruleStartCol` {Int}         the column the style rule ends
-  # * `declListStartRow' {Int}     row where the declaration list for the rule
-  #                                starts
-  # * `declListStartCol` {Int}     column in line where the declaration list for
-  #                                the rule starts
-  # * `declListEndRow` {Int}       line where the declaration list for the rule
-  #                                ends
-  # * `declListEndCol` {Int}       column in the line where the declaration list
-  #                                for the rule ends
+  # * `ruleStartRow` {Int}         the row the style rule i.e. after "{" starts
+  # * `ruleStartCol` {Int}         the column the style rule starts
+  # * `ruleEndRow' {Int}           row where the rule ends
+  # * `ruleEndCol` {Int}           column where the rule ends
   # * `filePath` {String}          the path to the file containing this selector
   constructor: (@path) ->
     @reset()
 
   reset: ->
-    @selector, @selectorGroup,
+    [@selector, @selectorGroup,
     @selectorStartRow, @selectorStartCol, @selectorEndRow, @selectorEndCol,
-    @ruleStartRow, @ruleStartCol = []
+    @ruleStartRow, @ruleStartCol, @ruleEndRow, @ruleEndCol] = []
 
     @id = @clss = @tag = off
 
-  setId: (r, c)->
+  setId: ->
     @valueSet() if (@clss or @tag)
     @id = on
-    @setSelectorStartRow(r)
-    @setSelectorStartCol(c)
 
-  setClass: (r, c)->
+  setClass: ->
     @valueSet() if (@id or @tag)
     @clss = on
-    @setSelectorStartRow(r)
-    @setSelectorStartCol(c)
 
-  setTag: (r, c) ->
+  setTag: ->
     @valueSet() if (@clss or @id)
     @tag = on
-    @setSelectorStartRow(r)
-    @setSelectorStartCol(c)
 
   typeSet: ->
     return @id or @clss or @tag
@@ -86,6 +74,14 @@ class SelectorInfoFactory
     @valueSet("ruleStartCol") if @ruleStartCol?
     @ruleStartCol = c
 
+  setRuleEndRow: (r) ->
+    @valueSet("ruleEndRow") if @ruleEndRow?
+    @ruleEndRow = r
+
+  setRuleEndCol: (c) ->
+    @valueSet("ruleEndCol") if @ruleEndCol?
+    @ruleEndCol = c
+
   create: ->
     si = {
       selector: @selector
@@ -96,10 +92,8 @@ class SelectorInfoFactory
       selectorEndCol: @selectorEndCol
       ruleStartRow: @ruleStartRow
       ruleStartCol: @ruleStartCol
-      declListStartRow: @declListStartRow
-      declListStartCol: @declListStartCol
-      declListEndRow: @declListEndRow
-      declListEndCol: @declListEndCol
+      ruleEndRow: @ruleEndRow
+      ruleEndCol: @ruleEndCol
       filePath: @path
     }
     for key, val in si

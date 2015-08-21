@@ -1,5 +1,6 @@
 quickEditorView = require './quick-editor-view'
 DirectoryCSSSearcher = require './directory-css-searcher'
+DirectoryIndexer = require './directory-indexer'
 MarkupParser = require './markup-parser'
 QuickEditorCache = require './quick-editor-cache'
 {Range, Point, CompositeDisposable, TextBuffer, File} = require 'atom'
@@ -42,6 +43,9 @@ module.exports = QuickEditor =
   ### Functionality Methods ###
 
   quickEdit: ->
+    DI = new DirectoryIndexer
+    DI.indexProject()
+    return
     if @panel.isVisible()
       @closeView(@found)
       @panel.hide()

@@ -43,9 +43,11 @@ Specify an absolute path to your styles directory when working in a large projec
   * Caching for larger projects
   * Show the name of CSS file
   * Link to open in new tab
+  * Generalize to provide a service for easy other language support
   * Editor updates when changed in another file at the same time
   * Support SASS and Stylus
   * Multiple matches in the same file
   * Support Jade
+  * Display info on status bar
   * Add support for javascript functions
   * Add support for color picking

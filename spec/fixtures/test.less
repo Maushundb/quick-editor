@@ -17,24 +17,51 @@
   }
 }
 
-#really-long-id {
+#multiId1, #multiId2 {
   height: 200px;
   margin: 0px auto;
   width: 100px;
   color: red;
 
-  .nestedName {
+  .test-nested-class {
     display: flex;
     top: 20px;
   }
 }
 
-.other-id-3 {
+#parent #child {
   height: 200px;
   margin: 0px auto;
   width: 100px;
-  animation-name: none;
-  display: inline-block;
+}
+
+.lots-of-nesting {
+  height: 200px;
+  margin: 0px auto;
+  .ln1 {
+    width: 100px;
+    animation-name: none;
+    display: inline-block;
+
+    #ln1 {
+      width: 100px;
+      animation-name: none;
+      display: inline-block
+    }
+  }
+
+  .ln2 {
+    width: 100px;
+    animation-name: none;
+    display: inline-block
+
+    #ln2 {
+      width: 100px;
+      animation-name: none;
+      display: inline-block
+    }
+  }
+
 }
 
 ////////// END DO NOT CHANGE //////////
