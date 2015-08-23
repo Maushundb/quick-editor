@@ -14,20 +14,26 @@ apm install quick-editor
 Or search for <code>quick-editor</code> in Atom settings view.
 
 # Key Bindings
-The default <code>shift-cmd-e</code> will toggle quick-edit while the cursor is over a CSS id or class
+The default <code>shift-cmd-e</code> or <code>shift-ctrl-e</code>will toggle quick-edit while the cursor is over a CSS id or class
 
 This can be edited by defining a keybinding as follows
 
 ```coffee
-'atom-text-editor':
+'.platform-darwin atom-text-editor':
   'shift-cmd-e': 'quick-editor:quick-edit'
+
+'.platform-linux atom-text-editor, .platform-win32 atom-text-editor':
+  'shift-ctrl-e': 'quick-editor:quick-edit'
 ```
+
 # Settings
 #### Styles Directory
 Specify an absolute path to your styles directory when working in a large project to improve performance.
 
 
 # Release Notes:
+## 0.4.0
+  * Added keybindings for Windows and Linux
 ## 0.4.0
 * Added the ability to specify a styles directory to improve performance on larger projects
 * Fixed bug with context menu not working
