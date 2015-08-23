@@ -7,5 +7,8 @@
 
 # For more detailed documentation see
 # https://atom.io/docs/latest/behind-atom-keymaps-in-depth
-'atom-text-editor':
+'.platform-darwin atom-text-editor':
   'shift-cmd-e': 'quick-editor:quick-edit'
+  
+'.platform-linux atom-text-editor, .platform-win32 atom-text-editor':
+  'shift-ctrl-e': 'quick-editor:quick-edit'
