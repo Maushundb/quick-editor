@@ -1,7 +1,7 @@
 {
   "name": "quick-editor",
   "main": "./lib/quick-editor",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "description": "Quickly select and edit CSS/LESS/SCSS styles from the context of your markup.",
   "keywords": [
     "css",
