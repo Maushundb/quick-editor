@@ -32,8 +32,10 @@ Specify an absolute path to your styles directory when working in a large projec
 
 
 # Release Notes:
-## 0.4.0
-  * Added keybindings for Windows and Linux
+
+## 0.4.1
+* Added keybindings for Windows and Linux
+
 ## 0.4.0
 * Added the ability to specify a styles directory to improve performance on larger projects
 * Fixed bug with context menu not working
@@ -42,7 +44,7 @@ Specify an absolute path to your styles directory when working in a large projec
 ## 0.3.0
 * Added the ability to add a new selector
 
-###Full change log [here](./CHANGELOG.md)
+### Full change log [here](./CHANGELOG.md)
 
 # Coming Soon:
   * Multiple files with same selector
