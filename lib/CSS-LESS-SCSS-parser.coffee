@@ -24,13 +24,15 @@ class CssLessScssParser
   # * `ruleEndCol` {Int}           column where the rule ends
   # * `filePath` {String}          the path to the file containing this selector
   parse: (text) ->
+    ## TODO NESTED CLASSES SHOULD APPEAR AS PARENT CHILD if PARENT { CHILD {}}
     comment = false
 
     selectorInfos = []
     row = col = 0
 
+    i = 0
     # Only handles outer level rules and comments
-    for i in [0...text.length]
+    while i < text.length
       switch text[i]
         when '\n', '\r\n'
           row++
@@ -39,13 +41,14 @@ class CssLessScssParser
         when '/'
           if text[i+1] is '/'
             comment = true
-        when ' ' then continue
+        when ' ' then break
         else
-          continue if comment
+          break if comment
           [infos, row, col, i] = @parseRule(text, {row: row, col: col, i: i})
           selectorInfos.push(si) for si in infos
           debugger
       col++
+      i++
 
     return selectorInfos
 
@@ -73,9 +76,12 @@ class CssLessScssParser
     col = loc.col
     currLine = if group? then group else ''
 
+    i = loc.i
     `outer: //`
-    for i in [loc.i...text.length]
+    while i < text.length
+      debugger if row is 31
       currLine += text[i]
+      infos = []
       switch text[i]
         when '\n', '\r\n'
           row++
@@ -86,33 +92,43 @@ class CssLessScssParser
           if text[i+1] is '/'
             comment = true
         when '{'
-          debugger
-          continue if comment
-          rawSelector = currLine.slice(0, -1).trim()
+          offSet = currLine.replace(/^\s+/g,'').length - 1
+          break if comment
+          rawSelector = currLine.replace(/^\s+|\s+$|\s*\{/g, '')
           if not f.typeSet() #not reaching a nested class
             f.setSelectorStartRow(row)
-            f.setSelectorStartCol(col - currLine.length)
+            # remove leading but not trailing spaces
+            f.setSelectorStartCol(col - offSet)
             f.setSelectorEndRow(row)
             f.setSelectorEndCol(col - 1) # do not include '{'
 
             f.setRuleStartRow(row)
             f.setRuleStartCol(col)
 
-            if rawSelector.split(" ").length > 1 # .id h1 {
-              selector = rawSelector.split(" ").pop() # only care about last selector
-            if rawSelector.split(",").length > 1 # "h1, h2, h3 {"
-              if group? #the current call is the second or above selector in the group
-                selector = rawSelector.substring(group.length, currLine.length).split(",")[0].trim()
+            if not sel
+              if rawSelector.split(/,\s*/g).length > 1 # "h1, h2, h3 {"
+                if group?
+                  #the current call is the second or above selector in the group
+                  selector = rawSelector.substring(
+                    group.length,
+                    currLine.length
+                  ).split(/,\s*/g)[0].trim()
+                else
+                  selector = rawSelector.split(/,\s*/g)[0].trim()
+              else if rawSelector.split(/\s+/g).length > 1 # .id h1 {
+                # only care about last selector
+                debugger
+                selector = rawSelector.split(/\s+/g).pop()
               else
-                selector = rawSelector.split(",")[0].trim()
+                selector = rawSelector
+
             else
-              selector = rawSelector
+              selector = sel
 
             switch selector[0]
               when "." then f.setClass()
               when "#" then f.setId()
               else f.setTag()
-
 
             f.addSelectorText selector
             f.addSelectorGroupText rawSelector
@@ -121,27 +137,35 @@ class CssLessScssParser
             # the current call is the first group in multiple and needs to
             # make recursive calls to create SelectorInfos for each proceeding
             # selector
-              for j in [1...currLine.trim().split(",").length]
-                sel = currLine.trim().split(",")[j]
-                @parseRule(text, {row: row, col: col, i: i}, false, sel, rawSelector)
+              selectors = rawSelector.split(/,\s*/g)
+              for j in [1...selectors.length]
+                selector = selectors[j]
+                 #only need infos, throw away row col and i
+                [infos, xRow, xCol, xI] = @parseRule(
+                  text, {row: row, col: col, i: i}, # starts at { again to copy
+                  false,
+                  selector,
+                  rawSelector
+                )
           else
             if cont # recurse on nested classes
               [infos, row, col, i] = @parseRule(
                 text,
-                {row: row, col: col, i: i - currLine.length}
+                {row: row, col: col - offSet, i: i - offSet }
               )
-              selectorInfos.push(si) for si in infos
         when '}'
           f.setRuleEndRow(row)
           f.setRuleEndCol(col)
-          si = f.create()
-          selectorInfos.push(si)
+          selectorInfos.push(f.create())
           `break outer`
 
+      selectorInfos.push(si) for si in infos
       col += 1
+      i++
 
-    return [selectorInfos, row, col, i + 1]
-
+    if text[i + 1] is '\n' or text[i + 1] is '\r\n'
+      return [selectorInfos, row + 1, 0, i + 1]
+    else return [selectorInfos, row, col + 1, i + 1]
 
 
 
