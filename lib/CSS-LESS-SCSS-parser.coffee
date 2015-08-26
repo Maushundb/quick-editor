@@ -18,7 +18,7 @@ class CssLessScssParser
   # * `selectorStartCol` {Int}     the column  the selector text starts
   # * `selectorEndRow` {Int}       the row the selector text ends
   # * `selectorEndCol` {Int}       the column  the selector text ends
-  # * `ruleStartRow` {Int}         the row the style rule i.e. after "{" starts
+  # * `ruleStartRow` {Int}         the row the style rule
   # * `ruleStartCol` {Int}         the column the style rule starts
   # * `ruleEndRow' {Int}           row where the rule ends
   # * `ruleEndCol` {Int}           column where the rule ends
@@ -46,7 +46,6 @@ class CssLessScssParser
           break if comment
           [infos, row, col, i] = @parseRule(text, {row: row, col: col, i: i})
           selectorInfos.push(si) for si in infos
-          debugger
       col++
       i++
 
@@ -79,9 +78,17 @@ class CssLessScssParser
     i = loc.i
     `outer: //`
     while i < text.length
-      debugger if row is 31
       currLine += text[i]
       infos = []
+
+      if f.typeSet() and text[i].match(/[^\s+|\{|\}]/)
+        if not f.ruleStartSet()
+          # line with first non-whitespace char after '{'
+          f.setRuleStartRow(row)
+          f.setRuleStartCol(col - (currLine.length - 1)) # should include indent
+        else
+          lastRuleLoc = [row, col]
+
       switch text[i]
         when '\n', '\r\n'
           row++
@@ -89,7 +96,7 @@ class CssLessScssParser
           comment = false
           currLine = ''
         when '/'
-          if text[i+1] is '/'
+          if text[i + 1] is '/'
             comment = true
         when '{'
           offSet = currLine.replace(/^\s+/g,'').length - 1
@@ -100,10 +107,8 @@ class CssLessScssParser
             # remove leading but not trailing spaces
             f.setSelectorStartCol(col - offSet)
             f.setSelectorEndRow(row)
-            f.setSelectorEndCol(col - 1) # do not include '{'
-
-            f.setRuleStartRow(row)
-            f.setRuleStartCol(col)
+            # do not include '{' and any preceding spaces
+            f.setSelectorEndCol(col - (currLine.match(/\s*{/)[0].length - 1))
 
             if not sel
               if rawSelector.split(/,\s*/g).length > 1 # "h1, h2, h3 {"
@@ -117,7 +122,6 @@ class CssLessScssParser
                   selector = rawSelector.split(/,\s*/g)[0].trim()
               else if rawSelector.split(/\s+/g).length > 1 # .id h1 {
                 # only care about last selector
-                debugger
                 selector = rawSelector.split(/\s+/g).pop()
               else
                 selector = rawSelector
@@ -154,9 +158,9 @@ class CssLessScssParser
                 {row: row, col: col - offSet, i: i - offSet }
               )
         when '}'
-          f.setRuleEndRow(row)
-          f.setRuleEndCol(col)
-          selectorInfos.push(f.create())
+          f.setRuleEndRow(lastRuleLoc[0])
+          f.setRuleEndCol(lastRuleLoc[1] + 1) # +1 ???
+          selectorInfos.push(f.create(@path))
           `break outer`
 
       selectorInfos.push(si) for si in infos

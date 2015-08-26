@@ -70,6 +70,9 @@ class SelectorInfoFactory
     @valueSet("ruleStartRow") if @ruleStartRow?
     @ruleStartRow = r
 
+  ruleStartSet: ->
+    return @ruleStartRow?
+
   setRuleStartCol: (c) ->
     @valueSet("ruleStartCol") if @ruleStartCol?
     @ruleStartCol = c
