@@ -81,7 +81,7 @@ class DirectoryIndexer
   # * `selectorStartCol` {Int}     the column  the selector text starts
   # * `selectorEndRow` {Int}       the row the selector text ends
   # * `selectorEndCol` {Int}       the column  the selector text ends
-  # * `ruleStartRow` {Int}         the row the style rule i.e. after "{" starts
+  # * `ruleStartRow` {Int}         the row the style rule starts
   # * `ruleStartCol` {Int}         the column the style rule starts
   # * `ruleEndRow' {Int}           row where the rule ends
   # * `ruleEndCol` {Int}           column where the rule ends

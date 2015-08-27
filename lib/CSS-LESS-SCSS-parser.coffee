@@ -67,27 +67,22 @@ class CssLessScssParser
   #                        function in the case of multiple selectors
   #
   # Returns an array of 1 or  more {SelectorInfo}s
-  parseRule: (text, loc, cont=true, sel=undefined, group=undefined) ->
+  parseRule: (text, loc, cont=true, sel=undefined, prevLine=undefined) ->
+    #TODO blank selector
     f = new SelectorInfoFactory(@path)
     selectorInfos = []
     comment = false
     row = loc.row
     col = loc.col
-    currLine = if group? then group else ''
+    currLine = if prevLine? then prevLine else ''
+    multipleSelectors = sel?
+
 
     i = loc.i
     `outer: //`
     while i < text.length
       currLine += text[i]
       infos = []
-
-      if f.typeSet() and text[i].match(/[^\s+|\{|\}]/)
-        if not f.ruleStartSet()
-          # line with first non-whitespace char after '{'
-          f.setRuleStartRow(row)
-          f.setRuleStartCol(col - (currLine.length - 1)) # should include indent
-        else
-          lastRuleLoc = [row, col]
 
       switch text[i]
         when '\n', '\r\n'
@@ -98,6 +93,16 @@ class CssLessScssParser
         when '/'
           if text[i + 1] is '/'
             comment = true
+        when ';'
+          if f.typeSet()
+            if not f.ruleStartSet()
+              f.setRuleStartRow(row)
+              # should include indent or spaces since last open brace
+              if currLine.indexOf('{') > 0 #single line selector
+                j = 0; j++ while (currLine[(currLine.length-1) - j] isnt '{')
+                f.setRuleStartCol(col - j + 1)
+              else f.setRuleStartCol(0)
+            lastRuleLoc = [row, col]
         when '{'
           offSet = currLine.replace(/^\s+/g,'').length - 1
           break if comment
@@ -110,24 +115,16 @@ class CssLessScssParser
             # do not include '{' and any preceding spaces
             f.setSelectorEndCol(col - (currLine.match(/\s*{/)[0].length - 1))
 
-            if not sel
+            if multipleSelectors
+              selector = sel
+            else
               if rawSelector.split(/,\s*/g).length > 1 # "h1, h2, h3 {"
-                if group?
-                  #the current call is the second or above selector in the group
-                  selector = rawSelector.substring(
-                    group.length,
-                    currLine.length
-                  ).split(/,\s*/g)[0].trim()
-                else
-                  selector = rawSelector.split(/,\s*/g)[0].trim()
+                selector = rawSelector.split(/,\s*/g)[0].trim()
               else if rawSelector.split(/\s+/g).length > 1 # .id h1 {
                 # only care about last selector
                 selector = rawSelector.split(/\s+/g).pop()
               else
                 selector = rawSelector
-
-            else
-              selector = sel
 
             switch selector[0]
               when "." then f.setClass()
@@ -137,7 +134,7 @@ class CssLessScssParser
             f.addSelectorText selector
             f.addSelectorGroupText rawSelector
 
-            if not group?
+            if not multipleSelectors
             # the current call is the first group in multiple and needs to
             # make recursive calls to create SelectorInfos for each proceeding
             # selector
@@ -149,11 +146,16 @@ class CssLessScssParser
                   text, {row: row, col: col, i: i}, # starts at { again to copy
                   false,
                   selector,
-                  rawSelector
+                  currLine.slice(0, -1)
                 )
           else
             if cont # recurse on nested classes
               [infos, row, col, i] = @parseRule(
+                text,
+                {row: row, col: col - offSet, i: i - offSet }
+              )
+            else # still recurse to move out of rule, but throw away extra infos
+              [xInfos, row, col, i] = @parseRule(
                 text,
                 {row: row, col: col - offSet, i: i - offSet }
               )
@@ -164,7 +166,7 @@ class CssLessScssParser
           `break outer`
 
       selectorInfos.push(si) for si in infos
-      col += 1
+      col++
       i++
 
     if text[i + 1] is '\n' or text[i + 1] is '\r\n'
