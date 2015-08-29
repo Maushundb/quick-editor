@@ -4,6 +4,10 @@ module.exports =
 class CssLessScssParser
 
   constructor: (@path) ->
+    @comment = false
+    @row = @col = @i = 0
+    @selectorInfos = []
+    @text = ''
 
   # Extracts all the selectors from the given file text
   # * `text` {String}              the text of a given style file
@@ -25,155 +29,135 @@ class CssLessScssParser
   # * `filePath` {String}          the path to the file containing this selector
   parse: (text) ->
     ## TODO NESTED CLASSES SHOULD APPEAR AS PARENT CHILD if PARENT { CHILD {}}
-    comment = false
+    @text = text
 
-    selectorInfos = []
-    row = col = 0
-
-    i = 0
     # Only handles outer level rules and comments
-    while i < text.length
-      switch text[i]
+    while @i < @text.length
+      switch @text[@i]
         when '\n', '\r\n'
-          row++
-          col = -1
-          comment = false
+          @row++; @col = -1
+          @comment = false
         when '/'
-          if text[i+1] is '/'
-            comment = true
+          if @text[@i+1] is '/'
+            @comment = true
         when ' ' then break
         else
-          break if comment
-          [infos, row, col, i] = @parseRule(text, {row: row, col: col, i: i})
-          selectorInfos.push(si) for si in infos
-      col++
-      i++
+          break if @comment
+          @parseSelector()
+      @col++
+      @i++
 
-    return selectorInfos
+    return @selectorInfos
 
-  # Responsible for parsing a single css rule with possible nesting
-  # * `text` {String}      The text being parsed
-  # * `loc` {Object}
-  #    * `row`             The row in the text the parser is at
-  #    * `col`             The column in the text the parser is at
-  #    * `i`               The exact position in text's string the parser is at
-  # * `cont` {Bool}        A flag telling the function to recurse on nested
-  #                        classes. This needs to be turned off when creating
-  #                        multiple SelectorInfos for selectors like h1, h2 or
-  #                        else any nested classes will be duplicated
-  # * `sel` {String}       The selector pre-assigned by a parent call of this
-  #                        function in the case of multiple selectors
-  # * `group` {String}     The group pre-assigned by a parent call of this
-  #                        function in the case of multiple selectors
-  #
-  # Returns an array of 1 or  more {SelectorInfo}s
-  parseRule: (text, loc, cont=true, sel=undefined, prevLine=undefined) ->
-    #TODO blank selector
+
+  # Responsible for parsing one or more selectors up until '{', creating
+  # nessesary factories, then passing control to @parseRule
+  parseSelector: ->
     f = new SelectorInfoFactory(@path)
-    selectorInfos = []
-    comment = false
-    row = loc.row
-    col = loc.col
-    currLine = if prevLine? then prevLine else ''
-    multipleSelectors = sel?
+    factories = []
+    currLine = ''
 
+    while @i < @text.length
+      currLine += @text[i]
 
-    i = loc.i
-    `outer: //`
-    while i < text.length
-      currLine += text[i]
-      infos = []
-
-      switch text[i]
+      switch @text[@i]
         when '\n', '\r\n'
-          row++
-          col = -1
-          comment = false
+          @newLine()
           currLine = ''
         when '/'
-          if text[i + 1] is '/'
-            comment = true
-        when ';'
-          if f.typeSet()
-            if not f.ruleStartSet()
-              f.setRuleStartRow(row)
-              # should include indent or spaces since last open brace
-              if currLine.indexOf('{') > 0 #single line selector
-                j = 0; j++ while (currLine[(currLine.length-1) - j] isnt '{')
-                f.setRuleStartCol(col - j + 1)
-              else f.setRuleStartCol(0)
-            lastRuleLoc = [row, col]
+          if @text[@i + 1] is '/'
+            @comment = true
         when '{'
           offSet = currLine.replace(/^\s+/g,'').length - 1
-          break if comment
+          break if @comment
           rawSelector = currLine.replace(/^\s+|\s+$|\s*\{/g, '')
-          if not f.typeSet() #not reaching a nested class
-            f.setSelectorStartRow(row)
-            # remove leading but not trailing spaces
-            f.setSelectorStartCol(col - offSet)
-            f.setSelectorEndRow(row)
-            # do not include '{' and any preceding spaces
-            f.setSelectorEndCol(col - (currLine.match(/\s*{/)[0].length - 1))
+          f.setSelectorStartRow(@row)
+          # remove leading but not trailing spaces
+          f.setSelectorStartCol(@col - offSet)
+          f.setSelectorEndRow(@row)
+          # do not include '{' and any preceding spaces
+          f.setSelectorEndCol(@col - (currLine.match(/\s*{/)[0].length - 1))
 
-            if multipleSelectors
-              selector = sel
-            else
-              if rawSelector.split(/,\s*/g).length > 1 # "h1, h2, h3 {"
-                selector = rawSelector.split(/,\s*/g)[0].trim()
-              else if rawSelector.split(/\s+/g).length > 1 # .id h1 {
-                # only care about last selector
-                selector = rawSelector.split(/\s+/g).pop()
-              else
-                selector = rawSelector
-
-            switch selector[0]
-              when "." then f.setClass()
-              when "#" then f.setId()
-              else f.setTag()
-
-            f.addSelectorText selector
-            f.addSelectorGroupText rawSelector
-
-            if not multipleSelectors
-            # the current call is the first group in multiple and needs to
-            # make recursive calls to create SelectorInfos for each proceeding
-            # selector
-              selectors = rawSelector.split(/,\s*/g)
-              for j in [1...selectors.length]
-                selector = selectors[j]
-                 #only need infos, throw away row col and i
-                [infos, xRow, xCol, xI] = @parseRule(
-                  text, {row: row, col: col, i: i}, # starts at { again to copy
-                  false,
-                  selector,
-                  currLine.slice(0, -1)
-                )
+          if rawSelector.split(/,\s*/g).length > 1 # "h1, h2, h3 {"
+            selector = rawSelector.split(/,\s*/g)[0].trim()
+            multipleSelectors = true
+          else if rawSelector.split(/\s+/g).length > 1 # .id h1 {
+            # only care about last selector
+            selector = rawSelector.split(/\s+/g).pop()
           else
-            if cont # recurse on nested classes
-              [infos, row, col, i] = @parseRule(
-                text,
-                {row: row, col: col - offSet, i: i - offSet }
-              )
-            else # still recurse to move out of rule, but throw away extra infos
-              [xInfos, row, col, i] = @parseRule(
-                text,
-                {row: row, col: col - offSet, i: i - offSet }
-              )
+            selector = rawSelector
+
+          f.addSelectorGroupText rawSelector
+
+          if multipleSelectors
+            # Creates a factory for each individual selector
+            selectors = rawSelector.split(/,\s*/g)
+            for j in [1...selectors.length]
+              otherSelector = selectors[j]
+              factoryCopy = f.clone()
+              factoryCopy.addSelectorText otherSelector
+              switch otherSelector[0]
+                when "." then factoryCopy.setClass()
+                when "#" then factoryCopy.setId()
+                else factoryCopy.setTag()
+              factories.push factoryCopy
+
+          switch selector[0]
+            when "." then f.setClass()
+            when "#" then f.setId()
+            else f.setTag()
+
+          f.addSelectorText selector
+          factories.push f
+          @next()
+          @parseRule()
+
+      @next()
+
+  # Responsible for parsing a single selector rule with possible nesting
+  # * `factories` [SelectorInfoFactory]     An array of one or more factories
+  #                                         that need to be updated with info
+  #                                         about the preceeding rule, and then
+  #                                         created
+  parseRule: (factories) ->
+    currLine = ''
+    # All factories share the same state, so any can be used for control flow
+    leadFactory = factories[0]
+
+    while @i < @text.length
+      switch @text[@i]
+        when '\n', '\r\n'
+          @newLine()
+          currLine = ''
+        when '/'
+          if @text[@i + 1] is '/'
+            @comment = true
+        when ';'
+          if not leadFactory.ruleStartSet()
+            f.setRuleStartRow(@row) for f in factories
+            # should include indent or spaces since last open brace
+            if currLine.indexOf('{') > 0 #single line selector
+              j = 0; j++ while (currLine[(currLine.length-1) - j] isnt '{')
+              f.setRuleStartCol(@col - j + 1) for f in factories
+            else f.setRuleStartCol(0) for f in factories
+          lastRuleLoc = [@row, @col]
+        when '{'
+          # recurse on nested classes
+          @i = 1 # TODO MOVE BACK
+          @parseSelector()
         when '}'
-          f.setRuleEndRow(lastRuleLoc[0])
-          f.setRuleEndCol(lastRuleLoc[1] + 1) # +1 ???
-          selectorInfos.push(f.create(@path))
-          `break outer`
+          f.setRuleEndRow(lastRuleLoc[0]) for f in factories
+          f.setRuleEndCol(lastRuleLoc[1] + 1)for f in factories # +1 ???
+          @selectorInfos.push(f.create(@path)) for f in factories
+          return
 
-      selectorInfos.push(si) for si in infos
-      col++
-      i++
+      @next()
 
-    if text[i + 1] is '\n' or text[i + 1] is '\r\n'
-      return [selectorInfos, row + 1, 0, i + 1]
-    else return [selectorInfos, row, col + 1, i + 1]
+  newLine: ->
+    @row++; @col = -1; @comment = false
 
-
+  next: ->
+    @col++; @i++
 
   malformedCSSRule: ->
     throw new Error "malformed css rule"
