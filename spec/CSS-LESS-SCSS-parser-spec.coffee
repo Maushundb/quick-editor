@@ -30,7 +30,7 @@ fdescribe "CssLessScssParser", ->
       "#ln1"
       ".ln2"
       "#ln2"
-      # ".odd-formatted-class"
+      ".odd-formatted-class"
     ]
     selectors = (selectorInfo.selector for selectorInfo in selectorInfos)
     for selector in selectors #TODO custom matcher?
@@ -54,7 +54,7 @@ fdescribe "CssLessScssParser", ->
       "#ln1"
       ".ln2"
       "#ln2"
-      # ".odd-formatted-class"
+      ".odd-formatted-class"
     ]
     groups = (selectorInfo.selectorGroup for selectorInfo in selectorInfos)
     for group in groups
@@ -207,6 +207,16 @@ fdescribe "CssLessScssParser", ->
           expect(s.ruleStartCol).toBe(43)
           expect(s.ruleEndRow).toBe(66)
           expect(s.ruleEndCol).toBe(56)
+        when ".odd-formatted-class"
+          expect(s.selectorStartRow).toBe(68)
+          expect(s.selectorStartCol).toBe(0)
+          expect(s.selectorEndRow).toBe(68)
+          expect(s.selectorEndCol).toBe(20)
+
+          expect(s.ruleStartRow).toBe(73)
+          expect(s.ruleStartCol).toBe(0)
+          expect(s.ruleEndRow).toBe(75)
+          expect(s.ruleEndCol).toBe(14)
 
   xdescribe "when scanning a large project", ->
     # timed performance tests

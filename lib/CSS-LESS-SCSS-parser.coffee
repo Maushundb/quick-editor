@@ -34,18 +34,16 @@ class CssLessScssParser
     # Only handles outer level rules and comments
     while @i < @text.length
       switch @text[@i]
-        when '\n', '\r\n'
-          @row++; @col = -1
-          @comment = false
+        when '\n', '\r\n', '\r'
+          @newLine()
         when '/'
-          if @text[@i+1] is '/'
+          if @text[@i + 1] is '/'
             @comment = true
         when ' ' then break
         else
           break if @comment
           @parseSelector()
-      @col++
-      @i++
+      @next()
 
     return @selectorInfos
 
@@ -58,25 +56,21 @@ class CssLessScssParser
     currLine = ''
 
     while @i < @text.length
-      currLine += @text[i]
+      currLine += @text[@i]
 
       switch @text[@i]
-        when '\n', '\r\n'
+        when '\n', '\r\n', '\r'
           @newLine()
-          currLine = ''
         when '/'
           if @text[@i + 1] is '/'
             @comment = true
         when '{'
-          offSet = currLine.replace(/^\s+/g,'').length - 1
           break if @comment
           rawSelector = currLine.replace(/^\s+|\s+$|\s*\{/g, '')
-          f.setSelectorStartRow(@row)
-          # remove leading but not trailing spaces
-          f.setSelectorStartCol(@col - offSet)
-          f.setSelectorEndRow(@row)
+
+          f.set "selectorEndRow", lastSelLoc[0]
           # do not include '{' and any preceding spaces
-          f.setSelectorEndCol(@col - (currLine.match(/\s*{/)[0].length - 1))
+          f.set "selectorEndCol", lastSelLoc[1] + 1 # exclusive upper bound
 
           if rawSelector.split(/,\s*/g).length > 1 # "h1, h2, h3 {"
             selector = rawSelector.split(/,\s*/g)[0].trim()
@@ -87,30 +81,38 @@ class CssLessScssParser
           else
             selector = rawSelector
 
-          f.addSelectorGroupText rawSelector
+          f.set "selectorGroup", rawSelector
 
           if multipleSelectors
             # Creates a factory for each individual selector
             selectors = rawSelector.split(/,\s*/g)
             for j in [1...selectors.length]
               otherSelector = selectors[j]
-              factoryCopy = f.clone()
-              factoryCopy.addSelectorText otherSelector
+              fCopy = f.clone()
+              fCopy.set "selector", otherSelector
               switch otherSelector[0]
-                when "." then factoryCopy.setClass()
-                when "#" then factoryCopy.setId()
-                else factoryCopy.setTag()
-              factories.push factoryCopy
+                when "." then fCopy.setClass()
+                when "#" then fCopy.setId()
+                else fCopy.setTag()
+              factories.push fCopy
 
           switch selector[0]
             when "." then f.setClass()
             when "#" then f.setId()
             else f.setTag()
 
-          f.addSelectorText selector
+          f.set "selector", selector
           factories.push f
           @next()
-          @parseRule()
+          @parseRule(factories)
+          return
+
+        else
+          unless @text[@i].match(/\s/)
+            lastSelLoc = [@row, @col]
+            unless f.selectorStartSet()
+              f.set "selectorStartRow", lastSelLoc[0]
+              f.set "selectorStartCol", lastSelLoc[1]
 
       @next()
 
@@ -125,8 +127,9 @@ class CssLessScssParser
     leadFactory = factories[0]
 
     while @i < @text.length
+      currLine += @text[@i] #TODO might wanna do this after and remove -1s
       switch @text[@i]
-        when '\n', '\r\n'
+        when '\n', '\r\n', '\r'
           @newLine()
           currLine = ''
         when '/'
@@ -134,20 +137,17 @@ class CssLessScssParser
             @comment = true
         when ';'
           if not leadFactory.ruleStartSet()
-            f.setRuleStartRow(@row) for f in factories
-            # should include indent or spaces since last open brace
-            if currLine.indexOf('{') > 0 #single line selector
-              j = 0; j++ while (currLine[(currLine.length-1) - j] isnt '{')
-              f.setRuleStartCol(@col - j + 1) for f in factories
-            else f.setRuleStartCol(0) for f in factories
+            f.set "ruleStartRow", @row for f in factories
+            f.set "ruleStartCol", (@col - (currLine.length - 1)) for f in factories
           lastRuleLoc = [@row, @col]
         when '{'
           # recurse on nested classes
-          @i = 1 # TODO MOVE BACK
+          @i -= (currLine.length - 1)
+          @col = 0
           @parseSelector()
         when '}'
-          f.setRuleEndRow(lastRuleLoc[0]) for f in factories
-          f.setRuleEndCol(lastRuleLoc[1] + 1)for f in factories # +1 ???
+          f.set "ruleEndRow", lastRuleLoc[0] for f in factories
+          f.set "ruleEndCol", lastRuleLoc[1] + 1 for f in factories # +1 ???
           @selectorInfos.push(f.create(@path)) for f in factories
           return
 
