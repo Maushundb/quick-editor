@@ -27,6 +27,7 @@ class DirectoryIndexer
     @fileIndex = new Index
     @selectorInfos = {}
     @nextInfoIndex = 0
+    @indexed = false
 
   # Indexes the current project
   indexProject: ->
@@ -34,38 +35,63 @@ class DirectoryIndexer
       directories = atom.project.getDirectories()
     else
       directories = [new Directory(atom.config.get('quick-editor.stylesDirectory'))]
-    @indexDirectory(dir) for dir in directories
+    return new Promise (resolve, reject) =>
+      try
+        @indexDirectory(dir) for dir in directories #PROMISES
+        @indexed = true
+        resolve()
+      catch e
+        console.error(e.message, e.stack)
+        reject()
 
   # Indexes the given directory
   # * `dir` the {Directory} to be indexed
   #
   # Throws error if directory cannot be opened
+  #
+  # Returns a promise that resolves when all child directories and files
+  # have been indexed
   indexDirectory: (dir) ->
-    dir.getEntries (error, entries) =>
-      if error isnt null
-        console.error(error, error.stack)
-        throw error
-      for entry in entries
-        if entry.isFile()
-          @indexFile(entry)
-        else
-          @indexDirectory(entry)
+    return new Promise (resolve, reject) =>
+      dir.getEntries (error, entries) =>
+        if error?
+          console.error(error, error.stack)
+          throw error
+        for entry in entries
+          if entry.isFile()
+            @indexFile(entry) #NEED TO DEAL WITH ALL THESE PROMISES
+          else
+            @indexDirectory(entry)
+        resolve()
 
 
   # Creates a mapping of all the selectors in the given file
   # * `file` the {File} to index
+  # Returns a promise that resolves when the file has been indexed
   indexFile: (file) ->
     ext = file.getBaseName().split(".").pop()
-    return if not (ext in @supportedFileExtensions)
-    file.read().then (text) => file.getRealPath().then (path) =>
-      selectorList = @extractAllSelectors(text, ext, path)
-      for selectorInfo in selectorList
-        i = @nextInfoIndex++
-        @selectorInfos[i] = selectorInfo
-        @selectorIndex.put(selectorInfo.selector, i)
-        @fileIndex.put(file, i)
-    .catch (e) ->
-      console.error(e, e.stack)
+    return unless (ext in @supportedFileExtensions)
+    return new Promise (resolve, reject) =>
+      file.read().then (text) => file.getRealPath().then (path) =>
+        selectorList = @extractAllSelectors(text, ext, path)
+        for selectorInfo in selectorList
+          i = @nextInfoIndex++
+          @selectorInfos[i] = selectorInfo
+          @selectorIndex.put(selectorInfo.selector, i)
+          @fileIndex.put(path, i)
+        resolve()
+      .catch (e) ->
+        console.error(e, e.stack)
+        reject()
+
+  # Creates a mapping of all the selectors in the given file that has already
+  # been indexed. Currently this just reindexes the entire file regardless of
+  # what has changed, and replaces all the nessesary selectorInfos
+  reindexFile: (file) ->
+    return
+
+  projectIndexed: ->
+    return @indexed
 
   # Extracts all the selectors from the given file text
   # * `text` {String} the text of a given style file
@@ -91,7 +117,7 @@ class DirectoryIndexer
       return #TODO
     else
       parser = new CssLessScssParser(path)
-    return parser.parse(text)
+    parser.parse(text)
 
   # Returns all instances of {SelectorInfo} whose file property is a given file
   queryByFile: (file) ->

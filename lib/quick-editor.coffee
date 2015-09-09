@@ -1,5 +1,4 @@
 quickEditorView = require './quick-editor-view'
-DirectoryCSSSearcher = require './directory-css-searcher'
 DirectoryIndexer = require './directory-indexer'
 MarkupParser = require './markup-parser'
 QuickEditorCache = require './quick-editor-cache'
@@ -17,7 +16,7 @@ module.exports = QuickEditor =
   panel : null
   subscriptions : null
   searcher : null
-  parser: null
+  markupParser: null
 
   activate: ->
     @quickEditorView = new quickEditorView()
@@ -25,8 +24,8 @@ module.exports = QuickEditor =
     @panel = atom.workspace.addBottomPanel(item: @quickEditorView, visible: false)
 
     @cssCache = new QuickEditorCache
-    @searcher = new DirectoryCSSSearcher
-    @parser = new MarkupParser
+    @indexer = new DirectoryIndexer
+    @markupParser = new MarkupParser
 
     # Events subscribed to in atom's system can be easily cleaned up with a CompositeDisposable
     @subscriptions = new CompositeDisposable
@@ -43,46 +42,69 @@ module.exports = QuickEditor =
   ### Functionality Methods ###
 
   quickEdit: ->
-    DI = new DirectoryIndexer
-    DI.indexProject()
-    return
     if @panel.isVisible()
       @closeView(@found)
       @panel.hide()
+    else if not @indexer.projectIndexed()
+      @indexer.indexProject().then () =>
+        @openEditor()
     else
-      try
-        @selector = @parseSelectedCSSSelector()
-      catch e
-        atom.beep()
-        console.warn(e.message)
-        return
-      @findFilesFromCSSIdentifier(@selector)
-      .then ([found, result]) =>
-        if found
-          @setupForEditing(result.text, result.start, result.end, result.file)
-          @edit()
-        else
-          @addNewSelector(@selector)
-      .catch (e) ->
-        console.error(e.message, e.stack)
+      @openEditor()
 
-  findFilesFromCSSIdentifier:(identifier) ->
-    #TODO changeME
-    @searcher.findFilesThatContain identifier
-    .then () => @searcher.getSelectorText().then ([found, result]) =>
-        @found = found
-        @searcher.clear()
-        if found
-          path = atom.workspace.getActiveTextEditor().getPath()
-          @cssCache.put(path, result.file.getPath())
-        return [found, result]
+  openEditor: ->
+    try
+      @selector = @parseSelector()
+    catch e
+      atom.beep()
+      console.warn(e.message)
+      return
+    @findFilesFromSelector(@selector).then (result) =>
+      if @found
+        @setupForEditing(result.text, result.start, result.end, result.file)
+        @edit()
+      else
+        @addNewSelector(@selector)
     .catch (e) ->
       console.error(e.message, e.stack)
 
-  parseSelectedCSSSelector: ->
+  findFilesFromSelector: ->
+    infos = @indexer.queryBySelector @selector
+    if infos.length
+      @found = true
+      info = infos[0] #TODO deal with multiple
+      file = new File info.filePath
+      file.read().then (text) =>
+        buffer = new TextBuffer()
+        buffer.setText(text)
+        text = buffer.getTextInRange([
+          [info.ruleStartRow, info.ruleStartCol],
+          [info.ruleEndRow, info.ruleEndCol]
+        ])
+
+        return {text: text,
+        start: info.ruleStartRow,
+        end: info.ruleEndRow,
+        file: new File(info.filePath)}
+    else
+      return new Promise (resolve, reject) ->
+        resolve()
+
+
+
+    # .then () => @searcher.getSelectorText().then ([found, result]) =>
+    #     @found = found
+    #     @searcher.clear()
+    #     if found
+    #       path = atom.workspace.getActiveTextEditor().getPath()
+    #       @cssCache.put(path, result.file.getPath())
+    #     return [found, result]
+    # .catch (e) ->
+    #   console.error(e.message, e.stack)
+
+  parseSelector: ->
     editor = atom.workspace.getActiveTextEditor()
-    @parser.setEditor(editor)
-    @parser.parse()
+    @markupParser.setEditor(editor)
+    @markupParser.parse()
 
   setupForEditing: (text, start, end, file) ->
     @quickEditorView.setText text
@@ -113,7 +135,7 @@ module.exports = QuickEditor =
       buffer.save()
       @closeView(false)
       @panel.hide()
-      @findFilesFromCSSIdentifier(selector)
+      @findFilesFromSelector(selector)
       .then ([found, result]) =>
         @setupForEditing(result.text, result.start, result.end, result.file)
         @edit()

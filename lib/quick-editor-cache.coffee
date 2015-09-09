@@ -5,7 +5,7 @@ class QuickEditorCache
   A cache for storing a mapping between:
     html files -> most recently edited css file that styles it
 
-  TODO: when used for both css and js, extend the class to validate file types
+  TODO: DELETE ME
   ###
 
   constructor: ->
