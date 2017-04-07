@@ -34,7 +34,7 @@ class MarkupParser
       if outOfSelector
         switch line[i]
           when "s"
-            prefix = "."
+            prefix = "\."
             `break outer`
           when "d"
             prefix = "#"
